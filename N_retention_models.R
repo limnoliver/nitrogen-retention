@@ -24,8 +24,9 @@ colors<-rainbow(n=nrow(table), start = 0.1, end = 0.9)
 
 for (i in 1:(length(z))){
   for (j in 1:(length(Vf))){
-    Vf1 = Vf[j]
     z1 = z[i]
+    Vf1 = Vf[j]
+
     row<-j+length(z)*(i-1)
     
     table[row,1]<- Vf1
@@ -40,7 +41,7 @@ for (i in 1:(length(z))){
   }
 }
 
-legend("bottomright", inset=0.02, lty = 1,lwd = 2,legend = paste("Vf=" ,table[,1], "  z=",  table[,2]), col = colors)
+legend("bottomright", inset=0.02, lty = 1,lwd = 2,legend = paste( "z=",  table[,2], "  Vf=" ,table[,1]), col = colors)
 
 #add vertical lines to denote day, month, year, etc
 # day
