@@ -6,6 +6,7 @@
 # Rn = proportion of N retained
 # tau = residence time (years)
 # z = mean depth (m)
+# Vf = settling velocity (m year-1)
 
 # plot curve
 pdf("N_retention.pdf")
