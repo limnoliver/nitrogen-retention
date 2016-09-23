@@ -9,8 +9,8 @@
 # Vf = settling velocity (m year-1)
 
 # Set parameter estimates
-Vf = c(-13.66, -9.92, -5.66) 
 z = c(2, 5,10)
+Vf = c(-13.66, -9.92, -5.66) 
 
 # plot curve
 pdf("N_retention.pdf")
@@ -22,19 +22,19 @@ names(table)<-c("Vf", "z")
 colors<-rainbow(n=nrow(table), start = 0.1, end = 0.9)
 
 
-for (i in 1:(length(Vf))){
-  for (j in 1:(length(z))){
-    Vf1 = Vf[i]
-    z1 = z[j]
+for (i in 1:(length(z))){
+  for (j in 1:(length(Vf))){
+    Vf1 = Vf[j]
+    z1 = z[i]
     row<-j+length(z)*(i-1)
     
     table[row,1]<- Vf1
     table[row,2]<- z1
     
     if (i ==1 & j==1){
-    curve(1-(exp((Vf1*x)/z1)), .001, 1000, log = "x", ylab="N Retention", xlab = "Residence Time (y)", col = colors[row])
+    curve(1-(exp((Vf1*x)/z1)), .001, 100, log = "x", ylab="N Retention", xlab = "Residence Time (y)", col = colors[row])
     } else {
-    curve(1-(exp((Vf1*x)/z1)), .001, 1000, log = "x", ylab="N Retention", xlab = "Residence Time (y)", col = colors[row], add=T)
+    curve(1-(exp((Vf1*x)/z1)), .001, 100, log = "x", ylab="N Retention", xlab = "Residence Time (y)", col = colors[row], add=T)
     }
 
   }
