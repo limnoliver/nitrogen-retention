@@ -36,9 +36,6 @@ for (i in 1:(length(Vf))){
     } else {
     curve(1-(exp((Vf1*x)/z1)), .001, 1000, log = "x", ylab="N Retention", xlab = "Residence Time (y)", col = colors[row], add=T)
     }
-# 
-# curve(1-(exp((Vf*x)/z)), .001, 1000, log = "x", ylab="N Retention", xlab = "Residence Time (y)", col = "blue", add = TRUE)
-# curve(1-(exp((Vf*x)/z)), .001, 1000, log = "x", ylab="N Retention", xlab = "Residence Time (y)", add = TRUE)
 
   }
 }
