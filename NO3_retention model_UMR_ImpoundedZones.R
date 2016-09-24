@@ -1,10 +1,18 @@
 
+# Workflow to calculate N retention prediction for each pool of the Upper Mississippi River
+# Sample dates - Aug 1-13, 2015 
+
 library(zoo)
 library(dataRetrieval)
 library(gtools)
 
-# Get USGS gauge data
+#Download USGS gauge data for UMR rivers and select tributaries
 
+parameterCd <- c("00060", "99133") # Discharge, NO3
+startDate <- "2015-08-01"
+endDate <- "2015-08-14"
+
+# Get USGS gauge data for all UMR stations.
 siteNumbers<-c('05288930', # Franklin
                '05331000', # St. Paul *** (pools 1)
                '05331580', # Hastings (LD 2) *** (pools 2-LakePepin)
@@ -31,30 +39,28 @@ siteNumbers<-c('05288930', # Franklin
 siteINFO<-readNWISsite(siteNumbers)
 dailyDataAvailable <- whatNWISdata(siteNumbers, service="uv")
 
+dischargeUnit <- readNWISdv(siteNumbers, parameterCd, startDate, endDate)
+dischargeUnit <- renameNWISColumns(dischargeUnit)
+
+# Convert to cubic meter per second 
+dischargeUnit$Flow_cms<-dischargeUnit$Flow /35.3147
+
+
+#Illinois River gauge data
 ILsiteNumbers<-c("05586100", #Valley City IL
                  "05586300") #Florence, IL
-
-parameterCd <- c("00060", "99133") # Discharge, NO3
-startDate <- "2015-08-01"
-endDate <- "2015-08-14"
-
-dischargeUnit <- readNWISdv(siteNumbers, parameterCd, startDate, endDate)
-# dischargeUnit <- readNWISuv(siteNumbers, parameterCd, startDate, endDate)
-dischargeUnit <- renameNWISColumns(dischargeUnit)
-# dischargeUnit<-dischargeUnit[which(dischargeUnit$Flow_Inst>0),]
-
-dischargeUnit$Flow_cms<-dischargeUnit$Flow /35.3147
 
 
 ILDischarge<-readNWISdv(ILsiteNumbers, parameterCd, startDate, endDate)
 ILDischarge <- renameNWISColumns(ILDischarge)
 ILDischarge$Flow_cms<-ILDischarge$Flow /35.3147
 
-#Get Discharge for pool 26 (Miss River plus IL)
+#Calculate Discharge for pool 26 (Miss River at Grafton plus IL)
 AltonDischarge<-merge(dischargeUnit[which(dischargeUnit$site_no=="05587450"),], ILDischarge[which(ILDischarge$site_no=="05586100"),], by="Date")
 AltonDischarge$Flow_cms<- (AltonDischarge$Flow_cms.x + AltonDischarge$Flow_cms.y)
 AltonDischarge$site_no<-9999
 
+#Check to make sure it looks correct
 plot(AltonDischarge$Flow_cms, ylim=c(0, max(AltonDischarge$Flow_cms)))
 points(AltonDischarge$Flow_cms.x, col="red")
 points(AltonDischarge$Flow_cms.y, col="blue")
@@ -63,7 +69,6 @@ dischargeUnit<-smartbind(dischargeUnit, AltonDischarge)
 
 #Load Flame data
 setwd("E:/Dropbox/ArcGIS")
-setwd("C:/Users/Luke/Dropbox/ArcGIS")
 
 data<-read.table('UMR_AllDays_Route2.txt', header=TRUE, sep="," ,skip=0)
 data$riverkm<-data$MEAS/1000
@@ -79,7 +84,7 @@ lines(NO3data$rollNO3, type="l", col="red")
 
 #Load Impoundment data
 setwd("E:/Dropbox/FLAME_MississippiRiver")
-setwd("C:/Users/Luke/Dropbox/FLAME_MississippiRiver")
+
 
 impound<-read.csv('ImpoundedAreas.csv', header=TRUE, stringsAsFactors = F)
 impound2<-impound[impound$Impound.Length>0,]
@@ -115,46 +120,46 @@ mtext("Nitrate (mg/L)", 2, 1.5, outer=T)
 mtext("River km", 1, 1, outer=T)
 dev.off()
 
-# Plot Lake Pepin Only
-pepin<-frames[[2]]
+# # Plot Lake Pepin Only
+# pepin<-frames[[2]]
+# 
+# png("dNO3Pepin.png", res=200, width=4,height=3, units="in")
+# par(mfrow=c(1,1))
+# par(mar=c(4,4,1,1), oma=c(0,0,0,0))
+# plot(pepin$riverkm, pepin$NITRATEM, ylab="", xlab="", las=1)
+# mtext("Nitrate (mg/L)", 2, 3)
+# mtext("River km", 1, 2)
+# dev.off()
+# 
+# par(mfrow=c(1,1))
+# 
+# plot(pepin$riverkm, pepin$NITRATEM)
+# points(pepin$riverkm, pepin$rollNO3, type="l", col="red")
+# 
+# pepin$dx<-c(NA,diff(pepin$MEAS))
+# pepin$dNO3<-c(NA, diff(pepin$NITRATEM))
+# 
+# 
+# 
+# Q<-17400*0.028316847
+# w<-2736
+# 
+# pepin$U<- pepin$dNO3/pepin$dx*Q/w*(-3600)*24	*1000
+# pepin_v2<-pepin[pepin$dx>10,]
+# 
+# plot(pepin$riverkm, pepin$NITRATEM)
+# points(pepin$riverkm, pepin$rollNO3, type="l", col="red")
+# 
+# plot(pepin_v2$U)
+# summary(pepin_v2$U)
+# Pepin_U<-mean(pepin_v2$U)
+# Pepin_sd<-sd(pepin_v2$U, na.rm=T)
+# Pepin_se<-Pepin_sd/sqrt(length(pepin_v2$U))
+# 
+# hist(pepin_v2$U, breaks=20)
 
-png("dNO3Pepin.png", res=200, width=4,height=3, units="in")
-par(mfrow=c(1,1))
-par(mar=c(4,4,1,1), oma=c(0,0,0,0))
-plot(pepin$riverkm, pepin$NITRATEM, ylab="", xlab="", las=1)
-mtext("Nitrate (mg/L)", 2, 3)
-mtext("River km", 1, 2)
-dev.off()
-
-par(mfrow=c(1,1))
-
-plot(pepin$riverkm, pepin$NITRATEM)
-points(pepin$riverkm, pepin$rollNO3, type="l", col="red")
-
-pepin$dx<-c(NA,diff(pepin$MEAS))
-pepin$dNO3<-c(NA, diff(pepin$NITRATEM))
-
-
-
-Q<-17400*0.028316847
-w<-2736
-
-pepin$U<- pepin$dNO3/pepin$dx*Q/w*(-3600)*24	*1000
-pepin_v2<-pepin[pepin$dx>10,]
-
-plot(pepin$riverkm, pepin$NITRATEM)
-points(pepin$riverkm, pepin$rollNO3, type="l", col="red")
-
-plot(pepin_v2$U)
-summary(pepin_v2$U)
-Pepin_U<-mean(pepin_v2$U)
-Pepin_sd<-sd(pepin_v2$U, na.rm=T)
-Pepin_se<-Pepin_sd/sqrt(length(pepin_v2$U))
-
-hist(pepin_v2$U, breaks=20)
 
 # Make a datatable of Q and w for each impoundment
-
 impound2$nearGauge<-c(rep('05331580', 2),rep('05378500', 6), rep('05420500',4), rep('05474500',1), rep('05587450',1), "9999")
 impound2$Date<-as.Date(NA)
 k=1
@@ -169,10 +174,13 @@ for (l in 1:nrow(impound2)){
   impound2$Q[l]<-dischargeUnit[which(dischargeUnit$site_no==impound2$nearGauge[l] & dischargeUnit$Date==impound2$Date[l]),'Flow_cms']
 }
 
-impound2$length<-impound2$ImpoundEnd-impound2$Impound.Start
-impound2$width<-impound2$Impound.Area.Sum/impound2$length
+impound2$width<-impound2$Impound.Area.Sum/impound2$Impound.Length
 
 #Calculate dNO3 and U for each pool
+# This occurs three ways. 
+# 1) uses rate of change through impounded area (All Data)
+# 2) uses NO3 start and NO3 End from uploaded csv
+# 3) uses mean of first 20 observations and last 20 observations
 
 impound2$Umean<-NA
 impound2$Usd<-NA
@@ -205,8 +213,6 @@ for (m in 1:nrow(impound2)){
   impound2$N_End[m]<-mean(tail(table_v1$rollNO3, n=20), na.rm=T)
 
 }
-
-impound2[,c(1, 7, 14:22)]
 
 impound2$U2mean<-(impound2$NO3_Start-impound2$NO3_End)*impound2$Q/impound2$Impound.Area.Sum*(86400000)*14.007/1000
 
