@@ -231,6 +231,8 @@ abline(v=0)
 
 hist(impound2[,21], breaks=15)
 
+impound2$delNO3<-impound2$NO3_Start- impound2$NO3_End
+impound2$RetainPercent<-impound2$delNO3/ impound2$NO3_Start
 
 
 # New Code
@@ -239,15 +241,19 @@ hist(impound2[,21], breaks=15)
 # Uses N_retention Model code
 
 impound3<-impound2[which(!is.na(impound2$PoolVolume_10.6_m3)),]
-
+Pepin3<-impound2[which(impound2$Pool=="Pepin"),]
 #Possible Settling Velocities
 # Vf = c(-13.66, -9.92, -5.66) 
-Vf = c(-35, -13.66, -5.66) 
+Vf = c(-100, -13.66, -5.66) 
 z = impound3$PoolMeanDepth_m
 WRT<-impound3$PoolVolume_10.6_m3*1000000/impound3$Q/31536000
 
-colors<-matlab.like(length(z))
+# colors<-matlab.like(n=(length(z)+4))[c(1:3, (length(z)+3):(length(z)+4))]
+colors<-primary.colors(n=(length(z)+1))
 lty<-seq(1, length(Vf), 1)
+
+table<-as.data.frame(matrix(ncol=4, nrow=length(Vf)*length(z)) )
+names(table)<-c("Vf", "z", "color", "lty")
 
 i=1
 j=1
@@ -258,6 +264,13 @@ for (i in 1:length(z)){
   for (j in 1:length(Vf)){
     Vf1 = Vf[j]
     
+    row<-j+length(Vf)*(i-1)
+    
+    table[row,1]<- Vf1
+    table[row,2]<- z1
+    table[row,3]<- colors[i]
+    table[row,4]<- lty[j]
+    
     if (i ==1 & j==1){
       curve(1-(exp((Vf1*x)/z1)), .001, 100, log = "x", type="n", ylab="N Retention (%)", xlab="WRT (y)")
       
@@ -266,8 +279,14 @@ for (i in 1:length(z)){
     }
     
 curve(1-(exp((Vf1*x)/z1)), .001, 100, log = "x", lwd=2, col=colors[i], lty=lty[j], add=T)
-points(x= WRT1, 1-(exp((Vf1*WRT1)/z1)), pch=8, col=colors[i], cex=2, lwd=2)
+# points(x= WRT1, 1-(exp((Vf1*WRT1)/z1)), pch=8, col=colors[i], cex=1, lwd=2)
 
   }
 }
 
+points((WRT), impound3$RetainPercent, col=colors, pch=8, lwd=2, cex=2)
+points((WRT[1]), Pepin3$RetainPercent, col=colors[length(colors)-1], pch=8, lwd=2, cex=2)
+
+legend("bottomright", inset=0.02, lwd = 2,legend = paste( "z=",  table[,2], "  Vf=" ,table[,1]), col = table[,3], lty=table[,4])
+
+box(which='plot')
