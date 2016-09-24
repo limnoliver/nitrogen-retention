@@ -248,8 +248,8 @@ Vf = c(-100, -13.66, -5.66)
 z = impound3$PoolMeanDepth_m
 WRT<-impound3$PoolVolume_10.6_m3*1000000/impound3$Q/31536000
 
-# colors<-matlab.like(n=(length(z)+4))[c(1:3, (length(z)+3):(length(z)+4))]
-colors<-primary.colors(n=(length(z)+1))
+colors<-matlab.like2(n=(length(z)+1))
+# colors<-primary.colors(n=(length(z)+1))
 lty<-seq(1, length(Vf), 1)
 
 table<-as.data.frame(matrix(ncol=4, nrow=length(Vf)*length(z)) )
@@ -285,7 +285,7 @@ curve(1-(exp((Vf1*x)/z1)), .001, 100, log = "x", lwd=2, col=colors[i], lty=lty[j
 }
 
 points((WRT), impound3$RetainPercent, col=colors, pch=8, lwd=2, cex=2)
-points((WRT[1]), Pepin3$RetainPercent, col=colors[length(colors)-1], pch=8, lwd=2, cex=2)
+points((WRT[1]), Pepin3$RetainPercent, col=colors[length(colors)], pch=8, lwd=2, cex=2)
 
 legend("bottomright", inset=0.02, lwd = 2,legend = paste( "z=",  table[,2], "  Vf=" ,table[,1]), col = table[,3], lty=table[,4])
 
