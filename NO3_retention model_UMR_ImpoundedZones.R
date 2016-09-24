@@ -241,5 +241,33 @@ hist(impound2[,21], breaks=15)
 impound3<-impound2[which(!is.na(impound2$PoolVolume_10.6_m3)),]
 
 #Possible Settling Velocities
-Vf = c(-13.66, -9.92, -5.66) 
+# Vf = c(-13.66, -9.92, -5.66) 
+Vf = c(-35, -13.66, -5.66) 
+z = impound3$PoolMeanDepth_m
+WRT<-impound3$PoolVolume_10.6_m3*1000000/impound3$Q/31536000
+
+colors<-matlab.like(length(z))
+lty<-seq(1, length(Vf), 1)
+
+i=1
+j=1
+
+for (i in 1:length(z)){
+  z1 = z[i]
+  WRT1<-WRT[i]
+  for (j in 1:length(Vf)){
+    Vf1 = Vf[j]
+    
+    if (i ==1 & j==1){
+      curve(1-(exp((Vf1*x)/z1)), .001, 100, log = "x", type="n", ylab="N Retention (%)", xlab="WRT (y)")
+      
+      abline(v=c(1,7,30,365)/365, col="darkgrey", lty=1, lwd=0.5)
+      mtext(c("Day", "Week", "Month", "Year"), side=3, outer=FALSE, at = c(1,7,30,365)/365, col="darkgrey", cex=1)
+    }
+    
+curve(1-(exp((Vf1*x)/z1)), .001, 100, log = "x", lwd=2, col=colors[i], lty=lty[j], add=T)
+points(x= WRT1, 1-(exp((Vf1*WRT1)/z1)), pch=8, col=colors[i], cex=2, lwd=2)
+
+  }
+}
 
