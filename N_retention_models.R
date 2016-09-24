@@ -14,6 +14,7 @@ library(colorRamps)
 z = c(2, 5,10)
 Vf = c(-13.66, -9.92, -5.66) 
 
+
 # plot curve
 pdf("N_retention.pdf")
 par(cex=1)
@@ -29,7 +30,7 @@ for (i in 1:(length(z))){
     z1 = z[i]
     Vf1 = Vf[j]
 
-    row<-j+length(z)*(i-1)
+    row<-j+length(Vf)*(i-1)
     
     table[row,1]<- Vf1
     table[row,2]<- z1
