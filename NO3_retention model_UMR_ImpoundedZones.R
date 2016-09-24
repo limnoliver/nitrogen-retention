@@ -230,3 +230,16 @@ abline(h=0)
 abline(v=0)
 
 hist(impound2[,21], breaks=15)
+
+
+
+# New Code
+# Calculate predicted N retention based on WRT and mean depth
+# Based on Harrison et al 2009 and Wollheim 2006
+# Uses N_retention Model code
+
+impound3<-impound2[which(!is.na(impound2$PoolVolume_10.6_m3)),]
+
+#Possible Settling Velocities
+Vf = c(-13.66, -9.92, -5.66) 
+
