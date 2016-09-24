@@ -1,3 +1,5 @@
+
+library(colorRamps)
 #########################
 # N retention model
 # From Verburg et al 2013
@@ -16,11 +18,11 @@ Vf = c(-13.66, -9.92, -5.66)
 pdf("N_retention.pdf")
 par(cex=1)
 
-table<-as.data.frame(matrix(ncol=2, nrow=length(Vf)*length(z)) )
-names(table)<-c("Vf", "z")
+table<-as.data.frame(matrix(ncol=4, nrow=length(Vf)*length(z)) )
+names(table)<-c("Vf", "z", "color", "lty")
 
-colors<-rainbow(n=nrow(table), start = 0.1, end = 0.9)
-
+colors<-blue2green2red(n=length(z))
+lty<-seq(1, length(Vf), 1)
 
 for (i in 1:(length(z))){
   for (j in 1:(length(Vf))){
@@ -31,30 +33,25 @@ for (i in 1:(length(z))){
     
     table[row,1]<- Vf1
     table[row,2]<- z1
+    table[row,3]<- colors[i]
+    table[row,4]<- lty[j]
+    
     
     if (i ==1 & j==1){
-    curve(1-(exp((Vf1*x)/z1)), .001, 100, log = "x", ylab="N Retention", xlab = "Residence Time (y)", col = colors[row])
-    } else {
-    curve(1-(exp((Vf1*x)/z1)), .001, 100, log = "x", ylab="N Retention", xlab = "Residence Time (y)", col = colors[row], add=T)
-    }
-
+      # empty plot containing labels. Plot this first so vertical lines appear behind data
+      curve(1-(exp((Vf1*x)/z1)), .001, 100, log = "x", ylab="N Retention", xlab = "Residence Time (y)", type="n", las=1)
+      # add vertical lines to denote day, month, year, etc
+      abline(v=c(1,7,30,365)/365, col="darkgrey", lty=1, lwd=0.5)
+      mtext(c("Day", "Week", "Month", "Year"), side=3, outer=FALSE, at = c(1,7,30,365)/365, col="darkgrey", cex=1)
+      }
+    # Plot all curves
+    curve(1-(exp((Vf1*x)/z1)), .001, 100, log = "x", col = colors[i], lty=lty[j], lwd=2, add=T)
   }
 }
 
-legend("bottomright", inset=0.02, lty = 1,lwd = 2,legend = paste( "z=",  table[,2], "  Vf=" ,table[,1]), col = colors)
+legend("bottomright", inset=0.02, lwd = 2,legend = paste( "z=",  table[,2], "  Vf=" ,table[,1]), col = table[,3], lty=table[,4])
 
-#add vertical lines to denote day, month, year, etc
-# day
-abline(v=1/365, col="red", lty=2)
-mtext("Day", side=3, outer=FALSE, at = 1/365, col="red", cex=1)
-# week
-abline(v=7/365, col="red", lty=2)
-mtext("Week", side=3, outer=FALSE, at = 7/365, col="red",cex=1)
-# month
-abline(v=30/365, col="red", lty=2)
-mtext("Month", side=3, outer=FALSE, at = 30/365, col="red",cex=1)
-# year
-abline(v=1, col = "red", lty = 2)
-mtext("Year", side=3, outer=FALSE, at = 1, col="red",cex=1)
+box(which='plot')
+
 dev.off()
 
