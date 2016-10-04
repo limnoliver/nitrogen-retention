@@ -118,9 +118,9 @@ dev.off()
 setwd("E:/Dropbox/FLAME_MississippiRiver")
 
 # Set parameter estimates; (Lake Pepin and Pool 8, examples)
-pool_names<-c("Lake Pepin", "Pool 8", "Pool 13", "Pool 22")
-z = c(4.5, 1.7, 1.9, 3) #mean depth (m)
-tau = c(9, 1.7, 1.5, 0.5)/365 #WRT (Years)
+pool_names<-c("Lake Pepin", "Pool 8", "Pool 22")
+z = c(4.5, 1.7, 3) #mean depth (m)
+tau = c(9, 1.7, 0.5)/365 #WRT (Years)
 
 vfrange<-c(0, 3) #log scale (m yr-1)
 
@@ -146,8 +146,7 @@ for (i in 1:(length(z))){
     table[i,3]<- colors[i]
     # table[i,4]<- lty[i]
     
-#     Vf_calc<-
-#       R<-
+
     
     
     if (i ==1){
@@ -155,13 +154,18 @@ for (i in 1:(length(z))){
       curve(1-(exp(((-1)*tau1*x)/z1)), 10^vfrange[1],10^vfrange[2], ylab="", log = "x", xlab ="", type="n", las=1, xaxt="n")
       # add vertical lines to denote day, month, year, etc
       # abline(v=10^seq(vfrange[1],vfrange[2], by=1), col="darkgrey", lty=1, lwd=0.5)
+      
+      R1<-0.513
+      Vf_calc1<-((-1)*z1/tau1 * log(1-R1))
+      polygon(c(10^(vfrange[1]-1), 10^(vfrange[1]-1), Vf_calc1, Vf_calc1), c(-1, R1 ,R1 , -1), border=colors[i], col=NA, lty=2, lwd=0.5)
+      
       axis(1, at=10^seq(vfrange[1],vfrange[2], by=1), labels=10^seq(vfrange[1], vfrange[2], by=1))
       mtext(expression(paste(NO[3], " Retention")), 2, 2.5)
       mtext(expression(paste(V[f], " (m year"^"-1", ")")), 1, 2.5)
     }
     # Plot all curves
     curve(1-(exp(((-1)*tau1*x)/z1)), 10^(vfrange[1]-1),10^(vfrange[2]+1), log = "x", col = colors[i], lty=1, lwd=2, add=T)
-    # polygon(c(10^(vfrange[1]-1), 10^(vfrange[1]-1), Vf_calc, Vf_calc), c(-1, R ,R , -1), col=colors[i], lty=0.5, lwd=0.5)
+
 }
 
 legend("topleft", inset=0.02, lwd = 2,legend = paste(pool_names, " (", tau*365, " d)", sep=""), col = table[,3], lty=1)
