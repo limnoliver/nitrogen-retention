@@ -62,9 +62,9 @@ dev.off()
 # Same model but let Vf vary and be the x-axis
 # ============================================
 
-# Set parameter estimates
-z = c(2, 5,10)
-tau = c(1/12,1/52, 1/365) #Years
+# Set parameter estimates; #Years (Lake Pepin and Pool 8, examples)
+z = c(1.7, 4.5)
+tau = c(9/365, 1.7/365) 
 
 vfrange<-c(-1, 3) #log scale
 
@@ -72,7 +72,7 @@ vfrange<-c(-1, 3) #log scale
 pdf("N_retention_vf.pdf")
 par(cex=1)
 
-table<-as.data.frame(matrix(ncol=4, nrow=length(Vf)*length(z)) )
+table<-as.data.frame(matrix(ncol=4, nrow=length(tau)*length(z)) )
 names(table)<-c("tau", "z", "color", "lty")
 
 colors<-blue2green2red(n=length(z))
@@ -96,11 +96,11 @@ for (i in 1:(length(z))){
       curve(1-(exp(((-1)*tau1*x)/z1)), 10^vfrange[1],10^vfrange[2], ylab="N Retention", log = "x", xlab = expression(paste(V[f], " (m year"^"-1", ")")), type="n", las=1, xaxt="n")
       # add vertical lines to denote day, month, year, etc
       abline(v=10^seq(vfrange[1],vfrange[2], by=1), col="darkgrey", lty=1, lwd=0.5)
-      axis(1, at=10^seq(vfrange[1],vfrange[2], by=1), labels=10^seq(-2, 2, by=1))
+      axis(1, at=10^seq(vfrange[1],vfrange[2], by=1), labels=10^seq(vfrange[1], vfrange[2], by=1))
 
     }
     # Plot all curves
-    curve(1-(exp(((-1)*tau1*x)/z1)), 10^vfrange[1],10^vfrange[2], log = "x", col = colors[i], lty=lty[j], lwd=2, add=T)
+    curve(1-(exp(((-1)*tau1*x)/z1)), 10^(vfrange[1]-1),10^(vfrange[2]+1), log = "x", col = colors[i], lty=lty[j], lwd=2, add=T)
   }
 }
 
