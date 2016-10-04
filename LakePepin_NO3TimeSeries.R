@@ -8,7 +8,7 @@ library(graphics)
 #Get Discharge Data
 
 parameterCd <- c("00010", "00060", "99133") # Discharge, NO3
-startDate <- "2015-01-01"
+startDate <- "2008-01-01"
 endDate <- Sys.Date()
 siteNumbers<-c('05378500') # Winona (LD 5a)
 
@@ -29,7 +29,7 @@ head(PepinLTRM)
 PepinLTRM$DATE<-as.Date(PepinLTRM$DATE, format="%m/%d/%Y")
 PepinLTRM<-PepinLTRM[,c("DATE", "LOCATCD", "TEMP", "NOX", "NOXQF")]
 
-PepinLTRM<-subset(PepinLTRM, DATE>startDate & !is.na(NOX) & NOXQF!=64)
+PepinLTRM<-subset(PepinLTRM, DATE>startDate & !is.na(NOX) & NOXQF!=64 & NOX>0)
 Dates<-as.Date(c("2007-01-01", "2008-01-01", "2009-01-01", "2010-01-01", "2011-01-01", "2012-01-01", "2013-01-01", "2014-01-01", "2015-01-01", "2016-01-01"))
 
 aggregated<-aggregate(PepinLTRM[,c("TEMP", "NOX")], by=list(PepinLTRM$DATE, PepinLTRM$LOCATCD), FUN="mean")
@@ -105,7 +105,7 @@ dev.off()
 
 
 merged<-merge(site1, site7, by="DATE")
-names(merged)<-(c("DATE", "Site1", "Temp_Site1", "NO3_Site1", "Site2", "Temp_Site2", "NO3_Site2"))
+names(merged)<-(c("DATE", "Site1", "Temp_Site1", "NO3_Site1", "Month1", "Site2", "Temp_Site2", "NO3_Site2", "Month2"))
 merged$NO3_Diff<-merged$NO3_Site2-merged$NO3_Site1
 
 
@@ -152,11 +152,47 @@ abline(h=mean(PepinMerged$U[PepinMerged$Flow_cms<flowcut]), col="black", lty=2)
 #End U plot
 
 
+#Calculate WRT and Vf
+PepinMerged$WRT<-619000000/PepinMerged$Flow_cms/3600/24/365 #days
+PepinMerged$R<-PepinMerged$NO3_Diff/PepinMerged$NO3_Site2
+PepinMerged$Vf<-((-4.5)/PepinMerged$WRT * log(1-PepinMerged$R))
 
-plot(PepinMerged$NO3_Diff~PepinMerged$Flow_cms, type="p")
-model<-lm(PepinMerged$NO3_Diff~PepinMerged$Flow_cms)
-summary(model)
-abline(model)
+VFmodel1<-lm(PepinMerged$Vf~PepinMerged$Flow_cms)
+summary(VFmodel1)
+plot(PepinMerged$Vf~PepinMerged$Flow_cms, type="p")
+abline(VFmodel1)
+
+VFmodel2<-lm(PepinMerged$Vf~PepinMerged$Flow_cms+PepinMerged$Temp_Site1+PepinMerged$NO3_Site2)
+summary(VFmodel2)
+slm1 <- step(VFmodel2)
+summary(slm1)
+
+#PLot MLR
+
+par(mfrow=c(1,3))
+par(oma=rep(0, 4))
+par(mar=c(4, 4, 1, 1))
+
+plot(PepinMerged$Vf~PepinMerged$Flow_cms, type="p")
+VFmodel1<-lm(PepinMerged$Vf~PepinMerged$Flow_cms)
+abline(VFmodel1)
+
+plot(resid(VFmodel1)~PepinMerged$NO3_Site2, type="p")
+VFmodel2<-lm(resid(VFmodel1)~PepinMerged$NO3_Site2)
+abline(VFmodel2)
+
+plot(resid(VFmodel2)~PepinMerged$Temp_Site2, type="p")
+VFmodel2<-lm(resid(VFmodel2)~PepinMerged$Temp_Site2)
+abline(VFmodel2)
+
+summary(slm1)
+
+par(mfrow=c(1,1))
+hist(PepinMerged$NO3_Site2, breaks=40, main="")
+par(new=T)
+curve(dgamma(x, scale=0.5, shape=2.8),from=0, to=15, main="", xlim=c(0,6), ylim=c(0,0.6), axes=F)
+
+
 
 model2<-lm(PepinMerged$NO3_Diff~PepinMerged$Flow_cms*PepinMerged$Temp_Site1)
 summary(model2)
