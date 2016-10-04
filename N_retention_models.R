@@ -121,6 +121,7 @@ setwd("E:/Dropbox/FLAME_MississippiRiver")
 pool_names<-c("Lake Pepin", "Pool 8", "Pool 22")
 z = c(4.5, 1.7, 3) #mean depth (m)
 tau = c(9, 1.7, 0.5)/365 #WRT (Years)
+R = c(0.513, 0.06, NA)
 
 vfrange<-c(0, 3) #log scale (m yr-1)
 
@@ -139,14 +140,14 @@ lty<-seq(1, length(tau), 1)
 for (i in 1:(length(z))){
     z1 = z[i]
     tau1 = tau[i]
+    R1<-R[i]
+    Vf_calc1<-((-1)*z1/tau1 * log(1-R1))
     
     
     table[i,1]<- tau1
     table[i,2]<- z1
     table[i,3]<- colors[i]
     # table[i,4]<- lty[i]
-    
-
     
     
     if (i ==1){
@@ -155,9 +156,7 @@ for (i in 1:(length(z))){
       # add vertical lines to denote day, month, year, etc
       # abline(v=10^seq(vfrange[1],vfrange[2], by=1), col="darkgrey", lty=1, lwd=0.5)
       
-      R1<-0.513
-      Vf_calc1<-((-1)*z1/tau1 * log(1-R1))
-      polygon(c(10^(vfrange[1]-1), 10^(vfrange[1]-1), Vf_calc1, Vf_calc1), c(-1, R1 ,R1 , -1), border=colors[i], col=NA, lty=2, lwd=0.5)
+
       
       axis(1, at=10^seq(vfrange[1],vfrange[2], by=1), labels=10^seq(vfrange[1], vfrange[2], by=1))
       mtext(expression(paste(NO[3], " Retention")), 2, 2.5)
@@ -165,6 +164,7 @@ for (i in 1:(length(z))){
     }
     # Plot all curves
     curve(1-(exp(((-1)*tau1*x)/z1)), 10^(vfrange[1]-1),10^(vfrange[2]+1), log = "x", col = colors[i], lty=1, lwd=2, add=T)
+    polygon(c(10^(vfrange[1]-1), 10^(vfrange[1]-1), Vf_calc1, Vf_calc1), c(-1, R1 ,R1 , -1), border=colors[i], col=NA, lty=2, lwd=1)
 
 }
 
