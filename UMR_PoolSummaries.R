@@ -12,17 +12,17 @@ dir1_files<-list.files(dir1)
 
 #Figure out file names
 dir1_dbf<-dir1_files[grep(".dbf", dir1_files)]
-dif1_shape<-sub(".dbf", "", dir1_dbf)
+dir1_shape<-sub(".dbf", "", dir1_dbf)
 
 #Make dataframe and vector to fill with information
-summary_df<-as.data.frame(matrix(nrow=length(dir1_dbf)+1, ncol=8))
+summary_df<-as.data.frame(matrix(nrow=length(dir1_shape)+1, ncol=8))
 names(summary_df)<-c("Pool", "TotalArea", "MC_Area", "SC_Area", "I_Area", "BWc_Area", "LP_Area", "BWi_Area" )
 all_codes<-c()
 all_desc<-c()
 
 #loop through all pool shapefiles
-for (file in 1:length(dir1_dbf)){
-i<-dif1_shape[file]
+for (file in 1:length(dir1_shape)){
+i<-dir1_shape[file]
 
 name_i<-sub("aqa_1989_", "", i)
 name_i<-sub("_z15n83", "", name_i)
@@ -74,6 +74,31 @@ unique_table<-data.frame(unique_codes, unique_desc)
 write.table(summary_df, "UMR_Pool_Areas.csv", sep=",", row.names=F, col.names=T)
 
 
+# ===========================================
+# Step 2
+# Calculate Volume for pools with Bathy data
+# ===========================================
+
 
 dir2<-(paste(getwd(), "/USGS_Bathy", sep=""))
 dir2_files<-list.files(dir2)
+
+#Figure out file names
+dir2_dbf<-dir2_files[grep("z15n83.dbf", dir2_files)]
+dir2_shape<-sub(".dbf", "", dir2_dbf)
+
+
+#Make dataframe and vector to fill with information
+summary_df<-as.data.frame(matrix(nrow=length(dir1_dbf)+1, ncol=8))
+names(summary_df)<-c("Pool", "TotalArea", "MC_Area", "SC_Area", "I_Area", "BWc_Area", "LP_Area", "BWi_Area" )
+all_codes<-c()
+all_desc<-c()
+
+#loop through all bathy shapefiles
+for (bathy in 1:length(dir2_shape)){
+  i<-dif1_shape[file]
+  
+  name_i<-sub("aqa_1989_", "", i)
+  name_i<-sub("_z15n83", "", name_i)
+  summary_df[file,1]<-name_i
+
