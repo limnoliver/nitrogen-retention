@@ -2,10 +2,15 @@
 # library(foreign)
 library(rgdal)
 library(rgeos)
+library(plyr)
+library(maptools)
 # Code to calculate surface area, volume, for each of the Upper Mississippi River pools
 
 
 setwd("E:/Dropbox/FLAME/basemaps/shapefiles")
+
+Pepinshape<-readOGR(getwd(), "LakePepin", stringsAsFactors = F)
+
 
 dir1<-(paste(getwd(), "/USGS_AquaticAreas", sep=""))
 dir1_files<-list.files(dir1)
@@ -89,16 +94,76 @@ dir2_shape<-sub(".dbf", "", dir2_dbf)
 
 
 #Make dataframe and vector to fill with information
-summary_df<-as.data.frame(matrix(nrow=length(dir1_dbf)+1, ncol=8))
-names(summary_df)<-c("Pool", "TotalArea", "MC_Area", "SC_Area", "I_Area", "BWc_Area", "LP_Area", "BWi_Area" )
-all_codes<-c()
-all_desc<-c()
+bathy_df<-as.data.frame(matrix(nrow=length(dir2_shape)+1, ncol=2))
+names(bathy_df)<-c("Pool", "Volume")
+grid_codes<-c()
+depths<-c()
 
+bathy=8
 #loop through all bathy shapefiles
 for (bathy in 1:length(dir2_shape)){
-  i<-dif1_shape[file]
+  i<-dir2_shape[bathy]
   
-  name_i<-sub("aqa_1989_", "", i)
+  name_i<-sub("bath_", "", i)
   name_i<-sub("_z15n83", "", name_i)
-  summary_df[file,1]<-name_i
+  name_i<-strsplit(name_i, split="_", fixed = T)[[1]][2]
+  bathy_df[bathy,1]<-name_i
 
+  shape_i<-readOGR(dir2, i, stringsAsFactors = F)
+  shape_i<-shape_i[!shape_i$GRID_CODE %in% c(9999,-9999),]
+  shape_i<-shape_i[!is.na((shape_i$DEPTH_M_)),]
+  
+  grid_codes<-c(grid_codes, unique(shape_i$GRID_CODE))
+  depths<-c(depths, unique(shape_i$DEPTH_M_)) 
+  
+  l<-strsplit(shape_i$DEPTH_M_, split=" ", fixed = T)
+  df<-rbind.fill(lapply(l,function(y){as.data.frame(t(y),stringsAsFactors=FALSE)}))
+  df <- data.frame(sapply(df, function(x) as.numeric(as.character(x))))
+  
+  df$V4<-NA
+  row=2
+  for (row in 1:nrow(df)){
+    if (is.finite(df$V2[row])){
+      df[row,4]<-df$V2[row]}
+    else {
+    df[row,4]<-mean(unlist(df[row,c(1,3)]))
+    }
+  }
+
+  
+  shape_i$AREA<-(sapply(shape_i@polygons, function(x) x@Polygons[[1]]@area))/1000000
+  shape_i$Volume<-NA
+  shape_i$Depth_Max_<-NA
+  shape_i$Depth_Mean<-df[,4]
+  # shape_i$DoverSA<-NA
+  
+  shape_i$Depth_Max_<-shape_i$GRID_CODE/100
+  shape_i$Volume<-shape_i$Depth_Mean*shape_i$AREA
+
+  bathy_df[bathy,2]<-sum(shape_i$Volume)
+  
+  if (name_i=="p4"){
+    
+    clip<-gIntersects(Pepinshape, shape_i, byid=T)
+    clip2<-as.vector(clip)
+    clipped<-shape_i[clip2,]
+  
+    bathy_df[nrow(bathy_df),2]<-sum(clipped$Volume)
+    bathy_df[nrow(bathy_df),1]<-"Pepin"
+    
+    bathy_df[bathy,2]<-sum(shape_i$Volume)-sum(clipped$Volume)
+  }
+    
+  print(bathy_df[bathy,])
+}
+bathy_df[,2]<-round(bathy_df[,2], digits=1)
+
+print(bathy_df)
+
+write.table(bathy_df, "UMR_Pool_Volumes.csv", sep=",", row.names=F, col.names=T)
+
+
+# unique_gridcodes<-unique(grid_codes)
+# unique_depths<-unique(depths)
+# unique_depth_table<-data.frame(unique_gridcodes, unique_depths)
+  
