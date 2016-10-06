@@ -483,6 +483,9 @@ merge1<-merge(summary_df, bathy_df, by='Pool', all=T)
 merge2<-merge(merge1, pool_summary, by='Pool', all=T)
 merge2<-merge2[order(merge2$RiverKM_start),]
 
+merge2$WRT_d<-merge2$Volume/merge2$Q*(1000000/3600/24) #days
+names(merge2)[names(merge2) == 'Q'] <- 'Q_cms'
+
 setwd('E:/Dropbox/FLAME_MississippiRiver')
 write.table(merge2, "UMR_Pool_Summary_Table.csv", sep=",", row.names=F, col.names=T)
 
