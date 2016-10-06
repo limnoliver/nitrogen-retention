@@ -237,84 +237,6 @@ dischargeUnit<-smartbind(dischargeUnit, AltonDischarge)
 
 
 
-#Load Flame data
-setwd("E:/Dropbox/ArcGIS")
-
-data<-read.table('UMR_AllDays_Route2.txt', header=TRUE, sep="," ,skip=0)
-data$riverkm<-data$MEAS/1000
-data<-data[order(data$MEAS),]
-data[data==0] <- NA
-data$ltime<-as.POSIXct(data$ltime, format="%Y-%m-%d %H:%M:%S", tz="America/Chicago")
-
-NO3data<-data[!is.na(data$NITRATEM),]
-NO3data$rollNO3<-rollmean(NO3data$NITRATEM, k=25, align='center', fill=NA)
-
-Turbdata<-data[!is.na(data$TurbFNU),]
-Turbdata$rollTurb<-rollmean(Turbdata$TurbFNU, k=10, align='center', fill=NA)
-
-plot(NO3data$NITRATEM)
-lines(NO3data$rollNO3, type="l", col="red")
-
-#Load dam data
-dams<-read.csv('DamsAlongRoute3.csv', sep=",", header=TRUE)
-dams$riverkm<-dams$MEAS/1000
-dams<-dams[order(dams$MEAS, decreasing=FALSE),]
-dams$name<-c('SAF-U', 'SAF-L', 1,2,3,4,5,'5a', 6,7,8,9,10,11,12,13,14,15,16,17,18, 19, 20, 21, 22, 24, 25, '26')
-
-dams1<-dams[dams$riverkm>10,]
-Pepindam<-as.data.frame(matrix(nrow=1, ncol=ncol(dams1)))
-names(Pepindam)=names(dams1)
-Pepindam[1,c(2,(ncol(Pepindam)-1):ncol(Pepindam))]<-c(148500 , 148.5, "PepinOutlet")
-
-dams2<-rbind(dams1, Pepindam)
-dams2$riverkm<-as.numeric(dams2$riverkm)
-dams2$MEAS<-as.numeric(dams2$MEAS)
-dams2<-dams2[order(dams2$riverkm, decreasing=FALSE),]
-
-dam_km<-dams2$riverkm
-dam_name<-dams2$name
-
-
-# start Loop here
-# Make list and data frame to fill with data
-flamedata_list<-list()
-flamedata_list2<-flamedata_list
-pool_summary<-as.data.frame(matrix(nrow=length(dam_name), ncol=10))
-names(pool_summary)<-(c("Pool", "RiverKM_start", "RiverKM_end","Pool_length", "NO3_start", "NO3_end", "dNO3", "Turb_start", "Turb_end", "dTurb"))
-
-dam_nu<-1
-for (dam_nu in 1:length(dam_km)){
-  if (dam_nu==1){
-    sub<-NO3data[NO3data$riverkm<dam_km[dam_nu],]
-    sub2<-Turbdata[Turbdata$riverkm<dam_km[dam_nu],]
-  }
-  else {
-  sub<-NO3data[NO3data$riverkm<dam_km[dam_nu] & NO3data$riverkm>dam_km[dam_nu-1], ]
-  sub2<-Turbdata[Turbdata$riverkm<dam_km[dam_nu] & Turbdata$riverkm>dam_km[dam_nu-1], ] 
-  }
-  flamedata_list[[dam_nu]]<-sub
-  flamedata_list2[[dam_nu]]<-sub2
-  names(flamedata_list)[[dam_nu]]<-dam_name[dam_nu]
-  names(flamedata_list2)[[dam_nu]]<-dam_name[dam_nu]
-  
-  #Distance
-  pool_summary[dam_nu,1]<-dam_name[dam_nu]
-  pool_summary[dam_nu,2:3]<-range(sub$riverkm)
-  pool_summary[dam_nu,4]<-pool_summary[dam_nu,3] - pool_summary[dam_nu,2]
-  #NO3
-  pool_summary[dam_nu,5]<-median(sub$NITRATEM[1:10], na.rm=T)
-  pool_summary[dam_nu,6]<-median(sub$NITRATEM[(length(sub$NITRATEM)-9):length(sub$NITRATEM)], na.rm=T)
-  pool_summary[dam_nu,7]<-pool_summary[dam_nu,6] - pool_summary[dam_nu,5]
-  #Turb
-  pool_summary[dam_nu,8]<-median(sub2$TurbFNU[1:20], na.rm=T)
-  pool_summary[dam_nu,9]<-median(sub2$TurbFNU[(length(sub2$TurbFNU)-19):length(sub2$TurbFNU)], na.rm=T)
-  pool_summary[dam_nu,10]<-pool_summary[dam_nu,9] - pool_summary[dam_nu,8]
-  
-  print(dam_name[dam_nu])
-}
-print(pool_summary)
-  
-
 # ==================================
 # Get Tributary Water Chemistry and Discharge Data
 # ==================================
@@ -368,7 +290,7 @@ trib_list[[length(trib_list)+1]]<-Rootmerge
 names(trib_list)[[length(trib_list)]]<-'Root River'
 
 #Get Tributary locations
-tribs<-read.csv('TribsAlongRoute.csv', sep=",", header=TRUE)
+tribs<-read.csv('TribsAlongRoute.csv', sep=",", header=TRUE, stringsAsFactors = F)
 tribs$riverkm<-tribs$MEAS/1000
 tribs<-tribs[order(tribs$MEAS, decreasing=FALSE),]
 
@@ -391,4 +313,124 @@ for (sample in 1:nrow(TribChemistry2)){
   TribChemistry2$Q[sample]<-table$Flow_cms[table$Date==date]
 }
 
-# Do something to calculate flow weighted concentrations
+TribChemistry2$Sample.Notes<-sub("St.", "Saint", TribChemistry2$Sample.Notes)
+TribChemistry2$Sample.Notes<-sub("River Confluence", "River", TribChemistry2$Sample.Notes)
+
+Inputs<-intersect(tribs$NAME, TribChemistry2$Sample.Notes)
+InputChemistry<-TribChemistry2[TribChemistry2$Sample.Notes %in% Inputs,]
+
+InputChemistry$riverkm<-tribs$riverkm[match(Inputs,tribs$NAME)]
+
+#Load Flame data
+setwd("E:/Dropbox/ArcGIS")
+
+data<-read.table('UMR_AllDays_Route2.txt', header=TRUE, sep="," ,skip=0)
+data$riverkm<-data$MEAS/1000
+data<-data[order(data$MEAS),]
+data[data==0] <- NA
+data$ltime<-as.POSIXct(data$ltime, format="%Y-%m-%d %H:%M:%S", tz="America/Chicago")
+
+NO3data<-data[!is.na(data$NITRATEM),]
+NO3data$rollNO3<-rollmean(NO3data$NITRATEM, k=25, align='center', fill=NA)
+
+Turbdata<-data[!is.na(data$TurbFNU),]
+Turbdata$rollTurb<-rollmean(Turbdata$TurbFNU, k=10, align='center', fill=NA)
+
+plot(NO3data$NITRATEM)
+lines(NO3data$rollNO3, type="l", col="red")
+
+#Load dam data
+dams<-read.csv('DamsAlongRoute3.csv', sep=",", header=TRUE)
+dams$riverkm<-dams$MEAS/1000
+dams<-dams[order(dams$MEAS, decreasing=FALSE),]
+dams$name<-c('SAF-U', 'SAF-L', 1,2,3,4,5,'5a', 6,7,8,9,10,11,12,13,14,15,16,17,18, 19, 20, 21, 22, 24, 25, '26')
+
+dams1<-dams[dams$riverkm>10,]
+Pepindam<-as.data.frame(matrix(nrow=1, ncol=ncol(dams1)))
+names(Pepindam)=names(dams1)
+Pepindam[1,c(2,(ncol(Pepindam)-1):ncol(Pepindam))]<-c(148500 , 148.5, "PepinOutlet")
+
+dams2<-rbind(dams1, Pepindam)
+dams2$riverkm<-as.numeric(dams2$riverkm)
+dams2$MEAS<-as.numeric(dams2$MEAS)
+dams2<-dams2[order(dams2$riverkm, decreasing=FALSE),]
+
+dam_km<-dams2$riverkm
+dam_name<-dams2$name
+
+
+
+#Calculate dNO3 and Turb
+
+InputChemistry$poolInterval<-findInterval(InputChemistry$riverkm, vec=dam_km )
+
+# start Loop here
+# Make list and data frame to fill with data
+flamedata_list<-list()
+flamedata_list2<-flamedata_list
+pool_summary<-as.data.frame(matrix(nrow=length(dam_name), ncol=10))
+names(pool_summary)<-(c("Pool", "RiverKM_start", "RiverKM_end","Pool_length", "NO3_start", "NO3_end", "dNO3", "Turb_start", "Turb_end", "dTurb"))
+
+dam_nu<-1
+for (dam_nu in 1:length(dam_km)){
+  if (dam_nu==1){
+    sub<-NO3data[NO3data$riverkm<dam_km[dam_nu],]
+    sub2<-Turbdata[Turbdata$riverkm<dam_km[dam_nu],]
+  }
+  else {
+    sub<-NO3data[NO3data$riverkm<dam_km[dam_nu] & NO3data$riverkm>dam_km[dam_nu-1], ]
+    sub2<-Turbdata[Turbdata$riverkm<dam_km[dam_nu] & Turbdata$riverkm>dam_km[dam_nu-1], ] 
+  }
+  flamedata_list[[dam_nu]]<-sub
+  flamedata_list2[[dam_nu]]<-sub2
+  names(flamedata_list)[[dam_nu]]<-dam_name[dam_nu]
+  names(flamedata_list2)[[dam_nu]]<-dam_name[dam_nu]
+  
+  #Distance
+  pool_summary[dam_nu,1]<-dam_name[dam_nu]
+  pool_summary[dam_nu,2:3]<-range(sub$riverkm)
+  pool_summary[dam_nu,4]<-pool_summary[dam_nu,3] - pool_summary[dam_nu,2]
+  
+  # If Triburary exists in pool
+  if (dam_nu %in% InputChemistry$poolInterval){
+    
+    # Do something to calculate flow weighted concentrations
+    #Miss River Metrics
+    MR_NO3in<-median(sub$NITRATEM[1:10], na.rm=T)
+    MR_Turbin<-median(sub2$TurbFNU[1:20], na.rm=T)
+    MR_Q<-
+    
+    #Tributary Metrics
+    Trib_NO3in<- InputChemistry$NITRATEMG[InputChemistry$poolInterval==dam_nu]
+    Trib_Turbin<- InputChemistry$TurbFNU[InputChemistry$poolInterval==dam_nu]
+    Trib_Q<- InputChemistry$Q[InputChemistry$poolInterval==dam_nu]
+      
+    #NO3 initial
+    pool_summary[dam_nu,5] <- ((Trib_NO3in*Trib_Q) + (MR_NO3in*MR_Q)) / (MR_Q+Trib_Q)
+    #Turb initial
+    pool_summary[dam_nu,8]<-
+    
+  }
+  else{
+    #NO3 initial
+    pool_summary[dam_nu,5]<-median(sub$NITRATEM[1:10], na.rm=T)
+    #Turb initial
+    pool_summary[dam_nu,8]<-median(sub2$TurbFNU[1:20], na.rm=T)
+  }
+  
+  #NO3 final
+  pool_summary[dam_nu,6]<-median(sub$NITRATEM[(length(sub$NITRATEM)-9):length(sub$NITRATEM)], na.rm=T)
+  #NO3 change
+  pool_summary[dam_nu,7]<-pool_summary[dam_nu,6] - pool_summary[dam_nu,5]
+  #Turb final
+  pool_summary[dam_nu,9]<-median(sub2$TurbFNU[(length(sub2$TurbFNU)-19):length(sub2$TurbFNU)], na.rm=T)
+  #Turb change
+  pool_summary[dam_nu,10]<-pool_summary[dam_nu,9] - pool_summary[dam_nu,8]
+  
+  print(dam_name[dam_nu])
+}
+print(pool_summary)
+
+
+  
+
