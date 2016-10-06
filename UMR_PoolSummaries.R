@@ -234,6 +234,9 @@ points(AltonDischarge$Flow_cms.y, col="blue")
 
 dischargeUnit<-smartbind(dischargeUnit, AltonDischarge)
 
+
+
+
 #Load Flame data
 setwd("E:/Dropbox/ArcGIS")
 
@@ -311,6 +314,81 @@ for (dam_nu in 1:length(dam_km)){
 }
 print(pool_summary)
   
-# str(flamedata_list)
+
+# ==================================
+# Get Tributary Water Chemistry and Discharge Data
+# ==================================
+
+#Triburary River gauge data
+TsiteNumbers<-c("05330920", #Minnesota River
+                "05344490", #St Croix River
+                "05369500",#Chippewa River
+                "05383075",#LaCrosse River
+                "05385000",#Root River Main
+                "05385500",#Root River South
+                "05407000",#Wisconsin River
+                "05418720",#Maquoketa River
+                "05446500",#Rock River
+                "05465700",#Iowa River
+                "05490600",#Des Moines River
+                "05586100",#Illinois River
+                "06935965"#Missouri River
+)
 
 
+TribNames<-c('Minnesota River',
+             'St. Croix River',
+             'Chippewa River',
+             'LaCrosse River',
+             'Root River Main',
+             'Root River South',
+             'Wisconsin River',
+             'Maquoketa River',
+             'Rock River',
+             'Iowa River Confluence',
+             'Des Moines River',
+             'Illinois River',
+             'Missouri River')
+
+tribtable<-cbind(TribNames, TsiteNumbers)
+
+trib_list<-list()
+for (trib in 1:length(TsiteNumbers)){
+  TDischarge<-readNWISdv(TsiteNumbers[trib], parameterCd, startDate, endDate)
+  TDischarge <- renameNWISColumns(TDischarge)
+  TDischarge$Flow_cms<-TDischarge$Flow /35.3147
+  
+  trib_list[[trib]]<-TDischarge
+  names(trib_list)[trib]<-TribNames[trib]
+}
+
+Rootmerge<-merge(trib_list[c('Root River Main')][[1]], trib_list[c('Root River South')][[1]], by='Date')
+Rootmerge$Flow_cms<-Rootmerge$Flow_cms.x+Rootmerge$Flow_cms.y
+trib_list[[length(trib_list)+1]]<-Rootmerge
+names(trib_list)[[length(trib_list)]]<-'Root River'
+
+#Get Tributary locations
+tribs<-read.csv('TribsAlongRoute.csv', sep=",", header=TRUE)
+tribs$riverkm<-tribs$MEAS/1000
+tribs<-tribs[order(tribs$MEAS, decreasing=FALSE),]
+
+tribs$name2<-c("MN", "SC", "Ch", "Bl", "Rt", "WI", "Rk", "IA", "DM", "IL", "MO", "OH")
+tribs2<-tribs[tribs$NAME!="Black River",]
+
+
+setwd('E:/Dropbox/FLAME_MississippiRiver/Data/2015_UMR_AllDays')
+TribChemistry<-read.csv('UMR2015_AllWaterChemSamples.csv', header=T, stringsAsFactors = F)
+
+TribChemistry2<-  TribChemistry[TribChemistry$Sample.Notes %in%  names(trib_list),]
+TribChemistry2$DateTime<-as.Date(TribChemistry2$DateTime, format="%m/%d/%Y")
+
+TribChemistry2$Q<-NA
+sample=1
+for (sample in 1:nrow(TribChemistry2)){
+  site<-TribChemistry2$Sample.Notes[sample]
+  date<-TribChemistry2$DateTime[sample]
+  table<-trib_list[[site]]
+  TribChemistry2$Q[sample]<-table$Flow_cms[table$Date==date]
+}
+
+# Do something to calculate flow weighted concentrations
