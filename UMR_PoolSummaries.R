@@ -87,8 +87,11 @@ summary_df[file, 8]<-sum(shape_i_BWi$Area_Calc)/summary_df[file, 2]
 print(summary_df[file,])
 
 }
-
-summary_df
+#Change pool names to match final merge and omit empty data
+summary_df$Pool<-sub("5a", "5A", summary_df$Pool)
+summary_df$Pool<-sub("p0", "p", summary_df$Pool)
+summary_df<-summary_df[!is.na(summary_df$TotalArea),]
+summary_df<-subset(summary_df, select=-LP_Area)
 
 unique_codes<-unique(all_codes)
 unique_desc<-unique(all_desc)
@@ -453,13 +456,33 @@ for (dam_nu in 1:length(dam_km)){
   #Turb Retention (0-1)
   pool_summary[dam_nu,12]<-pool_summary[dam_nu,10]/pool_summary[dam_nu,8]
   #Discharge out (cms)
-  pool_summary[dam_nu,13]<-MR_Q_out
+  if (length(MR_Q_out)==1){
+    pool_summary[dam_nu,13]<-MR_Q_out}
   print(dam_name[dam_nu])
 }
+
+pool_summary$Pool[pool_summary$Pool!='Pepin'& !is.na(pool_summary$Pool)]<-paste("p", pool_summary$Pool[pool_summary$Pool!='Pepin'& !is.na(pool_summary$Pool)], sep="")
+
 print(pool_summary)
 hist(pool_summary$RNO3)
 
-  
-bathy_df
-summary_df
-pool_summary
+# ==============================
+# Step 5 
+# Merge tables and output single file
+# bathy_df - Volume
+# summary_df - Area and BW/I percentages
+# pool_summary - Q, R, location
+# ==============================
+
+bathy_df$Pool
+summary_df$Pool
+pool_summary$Pool
+intersect(pool_summary$Pool, intersect(bathy_df$Pool,summary_df$Pool))
+
+merge1<-merge(summary_df, bathy_df, by='Pool', all=T)
+merge2<-merge(merge1, pool_summary, by='Pool', all=T)
+merge2<-merge2[order(merge2$RiverKM_start),]
+
+setwd('E:/Dropbox/FLAME_MississippiRiver')
+write.table(merge2, "UMR_Pool_Summary_Table.csv", sep=",", row.names=F, col.names=T)
+
