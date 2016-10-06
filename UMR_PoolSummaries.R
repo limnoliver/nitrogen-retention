@@ -248,9 +248,10 @@ dischargeUnit<-smartbind(dischargeUnit, AltonDischarge)
 # ==================================
 
 #Triburary River gauge data
-TsiteNumbers<-c("05330920", #Minnesota River
-                "05344490", #St Croix River
+TsiteNumbers<-c("05330920",#Minnesota River
+                "05344490",#St Croix River
                 "05369500",#Chippewa River
+                "05382000",#Black River Upper
                 "05383075",#LaCrosse River
                 "05385000",#Root River Main
                 "05385500",#Root River South
@@ -267,6 +268,7 @@ TsiteNumbers<-c("05330920", #Minnesota River
 TribNames<-c('Minnesota River',
              'St. Croix River',
              'Chippewa River',
+             'Black River Upper',
              'LaCrosse River',
              'Root River Main',
              'Root River South',
@@ -484,6 +486,11 @@ merge2<-merge(merge1, pool_summary, by='Pool', all=T)
 merge2<-merge2[order(merge2$RiverKM_start),]
 
 merge2$WRT_d<-merge2$Volume/merge2$Q*(1000000/3600/24) #days
+merge2$Z_mean_m<-merge2$Volume/merge2$TotalArea
+
+merge2$Vf<-((-1)*merge2$Z_mean_m/merge2$WRT_d*365 * log(1-merge2$RNO3))
+
+
 names(merge2)[names(merge2) == 'Q'] <- 'Q_cms'
 
 setwd('E:/Dropbox/FLAME_MississippiRiver')
