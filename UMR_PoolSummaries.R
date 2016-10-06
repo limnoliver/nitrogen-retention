@@ -7,11 +7,6 @@ library(plyr)
 library(maptools)
 library(dataRetrieval)
 library(zoo)
-# Code to calculate surface area, volume, for each of the Upper Mississippi River pools
-
-# Get Lake Pepin Shapefile
-setwd("E:/Dropbox/FLAME/basemaps/shapefiles")
-Pepinshape<-readOGR(getwd(), "LakePepin", stringsAsFactors = F)
 
 # Get Dam Discharge Data
 setwd("E:/Dropbox/FLAME_MississippiRiver")
@@ -25,6 +20,14 @@ names(DamQDaily)[1]<-"Date"
 
 #convert to cms
 DamQDaily[,2:ncol(DamQDaily)]<-DamQDaily[,2:ncol(DamQDaily)]/35.3147
+
+# ================================
+# Code to calculate surface area, volume, for each of the Upper Mississippi River pools
+# ================================
+
+# Get Lake Pepin Shapefile
+setwd("E:/Dropbox/FLAME/basemaps/shapefiles")
+Pepinshape<-readOGR(getwd(), "LakePepin", stringsAsFactors = F)
 
 
 dir1<-(paste(getwd(), "/USGS_AquaticAreas", sep=""))
@@ -186,30 +189,19 @@ write.table(bathy_df, "UMR_Pool_Volumes.csv", sep=",", row.names=F, col.names=T)
 # Determine discharge for sample events
 # ==============================
 
-
 parameterCd <- c("00060", "99133") # Discharge, NO3
 startDate <- "2015-08-01"
 endDate <- "2015-08-14"
 
 # Get USGS gauge data for all UMR stations.
-siteNumbers<-c('05288930', # Franklin
-               '05331000', # St. Paul *** (pools 1)
+siteNumbers<-c('05331000', # St. Paul *** (pools 1)
                '05331580', # Hastings (LD 2) *** (pools 2-LakePepin)
-               '05344980', # Red Wing (LD 3)
-               '05355341', # Below Lake Pepin
                '05378500', # Winona (LD 5a) *** (pools 4-9)
-               '05389500', # McGregor
-               '05411500', # Clayton
-               '05420400', # Fulton(LD 13)
                '05420500', # Clinton *** (pools 10-15)
                '05474500', # Keokuk (LD 19) *** (pools 16-19)
-               '05501600', # Hannibal
                '05587450', # At Grafton *** (pools 20-25)
-               '05587455', # Below Grafton 
-               '05587498', # Alton (LD 26)
                '07010000', # St. Louis ***
                '07020500', # Chester ***
-               '07020850', # Cape Girardeau
                '07022000', # Thebes ***
                '370000089122601', # Above Cairo
                '365730089063001' # Below Cairo
@@ -245,7 +237,6 @@ points(AltonDischarge$Flow_cms.x, col="red")
 points(AltonDischarge$Flow_cms.y, col="blue")
 
 dischargeUnit<-smartbind(dischargeUnit, AltonDischarge)
-
 
 
 
@@ -302,6 +293,7 @@ trib_list[[length(trib_list)+1]]<-Rootmerge
 names(trib_list)[[length(trib_list)]]<-'Root River'
 
 #Get Tributary locations
+setwd("E:/Dropbox/ArcGIS")
 tribs<-read.csv('TribsAlongRoute.csv', sep=",", header=TRUE, stringsAsFactors = F)
 tribs$riverkm<-tribs$MEAS/1000
 tribs<-tribs[order(tribs$MEAS, decreasing=FALSE),]
@@ -333,6 +325,13 @@ InputChemistry<-TribChemistry2[TribChemistry2$Sample.Notes %in% Inputs,]
 
 InputChemistry$riverkm<-tribs$riverkm[match(Inputs,tribs$NAME)]
 
+
+# =================================
+# Step 4
+# Calculate Change in NO3/Turb for each pool
+# Flow weighted
+# =================================
+
 #Load Flame data
 setwd("E:/Dropbox/ArcGIS")
 
@@ -360,7 +359,7 @@ dams$name<-c('SAF-U', 'SAF-L', 1,2,3,4,5,'5A', 6,7,8,9,10,11,12,13,14,15,16,17,1
 dams1<-dams[dams$riverkm>10,]
 Pepindam<-as.data.frame(matrix(nrow=1, ncol=ncol(dams1)))
 names(Pepindam)=names(dams1)
-Pepindam[1,c(2,(ncol(Pepindam)-1):ncol(Pepindam))]<-c(148500 , 148.5, "PepinOutlet")
+Pepindam[1,c(2,(ncol(Pepindam)-1):ncol(Pepindam))]<-c(148500 , 148.5, "Pepin")
 
 dams2<-rbind(dams1, Pepindam)
 dams2$riverkm<-as.numeric(dams2$riverkm)
@@ -373,9 +372,10 @@ dam_name<-dams2$name
 dams$name
 names(DamQDaily)[2:ncol(DamQDaily)]<-sub("DAM", "", names(DamQDaily)[2:ncol(DamQDaily)])
 
-#Calculate dNO3 and Turb
 
+#Indicate which rows have tributaries entering
 InputChemistry$poolInterval<-findInterval(InputChemistry$riverkm, vec=c(0,dam_km) )
+
 
 # start Loop here
 # Make list and data frame to fill with data
