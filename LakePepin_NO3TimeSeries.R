@@ -194,6 +194,8 @@ curve(dgamma(x, scale=0.5, shape=2.8),from=0, to=15, main="", xlim=c(0,6), ylim=
 
 
 
+
+
 model2<-lm(PepinMerged$NO3_Diff~PepinMerged$Flow_cms*PepinMerged$Temp_Site1)
 summary(model2)
 
