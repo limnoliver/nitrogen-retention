@@ -118,10 +118,10 @@ dev.off()
 setwd("E:/Dropbox/FLAME_MississippiRiver")
 
 # Set parameter estimates; (Lake Pepin and Pool 8, examples)
-pool_names<-c("Lake Pepin", "Pool 8", "Pool 22")
-z = c(4.5, 1.7, 3) #mean depth (m)
-tau = c(9, 1.7, 0.5)/365 #WRT (Years)
-R = c(0.513, 0.06, NA)
+pool_names<-c("Lake Pepin","Lake Pepin", "Pool 8", "Pool 22")
+z = c(4.5,4.5, 1.7, 3) #mean depth (m)
+tau = c(13.05,9, 1.7, 0.5)/365 #WRT (Years)
+R = c(0.474719,0.513, 0.06, NA)
 
 vfrange<-c(0, 3) #log scale (m yr-1)
 
@@ -136,13 +136,13 @@ names(table)<-c("tau", "z", "color", "lty")
 
 colors<-blue2green2red(n=length(z))
 lty<-seq(1, length(tau), 1)
-
+Vf_calc<-rep(NA, length(z))
 for (i in 1:(length(z))){
     z1 = z[i]
     tau1 = tau[i]
     R1<-R[i]
     Vf_calc1<-((-1)*z1/tau1 * log(1-R1))
-    
+    Vf_calc[i]<-Vf_calc1
     
     table[i,1]<- tau1
     table[i,2]<- z1
