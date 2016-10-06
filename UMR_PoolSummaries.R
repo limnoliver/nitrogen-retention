@@ -1,3 +1,4 @@
+rm(list = ls())
 
 # library(foreign)
 library(rgdal)
@@ -99,7 +100,7 @@ names(bathy_df)<-c("Pool", "Volume")
 grid_codes<-c()
 depths<-c()
 
-bathy=8
+bathy=1
 #loop through all bathy shapefiles
 for (bathy in 1:length(dir2_shape)){
   i<-dir2_shape[bathy]
@@ -120,6 +121,7 @@ for (bathy in 1:length(dir2_shape)){
   df<-rbind.fill(lapply(l,function(y){as.data.frame(t(y),stringsAsFactors=FALSE)}))
   df <- data.frame(sapply(df, function(x) as.numeric(as.character(x))))
   
+  #Calculate mean depth for each polygon. Input shapefile displays depth as a range (e.g., "0.2 - 0.4"). Code selects for middle of range. 
   df$V4<-NA
   row=2
   for (row in 1:nrow(df)){
@@ -142,8 +144,10 @@ for (bathy in 1:length(dir2_shape)){
 
   bathy_df[bathy,2]<-sum(shape_i$Volume)
   
+  # For Pool 4, clip Lake Pepin and summarize it separately
   if (name_i=="p4"){
     
+    #find polygons that fall within lake pepin and select those. 
     clip<-gIntersects(Pepinshape, shape_i, byid=T)
     clip2<-as.vector(clip)
     clipped<-shape_i[clip2,]
@@ -151,6 +155,7 @@ for (bathy in 1:length(dir2_shape)){
     bathy_df[nrow(bathy_df),2]<-sum(clipped$Volume)
     bathy_df[nrow(bathy_df),1]<-"Pepin"
     
+    # Remove Pepin metrics from Pool 4 summary
     bathy_df[bathy,2]<-sum(shape_i$Volume)-sum(clipped$Volume)
   }
     
