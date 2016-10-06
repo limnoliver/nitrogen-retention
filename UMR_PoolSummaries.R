@@ -1,5 +1,5 @@
 rm(list = ls())
-
+options(digits=4)
 # library(foreign)
 library(rgdal)
 library(rgeos)
@@ -381,8 +381,8 @@ InputChemistry$poolInterval<-findInterval(InputChemistry$riverkm, vec=c(0,dam_km
 # Make list and data frame to fill with data
 flamedata_list<-list()
 flamedata_list2<-flamedata_list
-pool_summary<-as.data.frame(matrix(nrow=length(dam_name), ncol=10))
-names(pool_summary)<-(c("Pool", "RiverKM_start", "RiverKM_end","Pool_length", "NO3_start", "NO3_end", "dNO3", "Turb_start", "Turb_end", "dTurb"))
+pool_summary<-as.data.frame(matrix(nrow=length(dam_name), ncol=12))
+names(pool_summary)<-(c("Pool", "RiverKM_start", "RiverKM_end","Pool_length", "NO3_start", "NO3_end", "dNO3", "Turb_start", "Turb_end", "dTurb", "RNO3", "RTurb"))
 
 dam_nu<-1
 for (dam_nu in 1:length(dam_km)){
@@ -435,16 +435,20 @@ for (dam_nu in 1:length(dam_km)){
   #NO3 final
   pool_summary[dam_nu,6]<-median(sub$NITRATEM[(length(sub$NITRATEM)-9):length(sub$NITRATEM)], na.rm=T)
   #NO3 change
-  pool_summary[dam_nu,7]<-pool_summary[dam_nu,6] - pool_summary[dam_nu,5]
+  pool_summary[dam_nu,7]<- pool_summary[dam_nu,5] - pool_summary[dam_nu,6]
+  #NO3 Retention (0-1)
+  pool_summary[dam_nu,11]<-pool_summary[dam_nu,7]/pool_summary[dam_nu,5]
   #Turb final
   pool_summary[dam_nu,9]<-median(sub2$TurbFNU[(length(sub2$TurbFNU)-19):length(sub2$TurbFNU)], na.rm=T)
   #Turb change
-  pool_summary[dam_nu,10]<-pool_summary[dam_nu,9] - pool_summary[dam_nu,8]
+  pool_summary[dam_nu,10]<- pool_summary[dam_nu,8] - pool_summary[dam_nu,9]
+  #Turb Retention (0-1)
+  pool_summary[dam_nu,12]<-pool_summary[dam_nu,10]/pool_summary[dam_nu,8]
   
   print(dam_name[dam_nu])
 }
 print(pool_summary)
-
+hist(pool_summary$RNO3)
 
   
 
