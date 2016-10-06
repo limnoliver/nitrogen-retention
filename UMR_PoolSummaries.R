@@ -381,8 +381,8 @@ InputChemistry$poolInterval<-findInterval(InputChemistry$riverkm, vec=c(0,dam_km
 # Make list and data frame to fill with data
 flamedata_list<-list()
 flamedata_list2<-flamedata_list
-pool_summary<-as.data.frame(matrix(nrow=length(dam_name), ncol=12))
-names(pool_summary)<-(c("Pool", "RiverKM_start", "RiverKM_end","Pool_length", "NO3_start", "NO3_end", "dNO3", "Turb_start", "Turb_end", "dTurb", "RNO3", "RTurb"))
+pool_summary<-as.data.frame(matrix(nrow=length(dam_name), ncol=13))
+names(pool_summary)<-(c("Pool", "RiverKM_start", "RiverKM_end","Pool_length", "NO3_start", "NO3_end", "dNO3", "Turb_start", "Turb_end", "dTurb", "RNO3", "RTurb", "Q"))
 
 dam_nu<-1
 for (dam_nu in 1:length(dam_km)){
@@ -405,6 +405,14 @@ for (dam_nu in 1:length(dam_km)){
   pool_summary[dam_nu,2:3]<-range(sub$riverkm)
   pool_summary[dam_nu,4]<-pool_summary[dam_nu,3] - pool_summary[dam_nu,2]
   
+  if (dam_name[dam_nu]=='Pepin'){
+    MR_Q_out<-DamQDaily[DamQDaily$Date==flame_date,c('3')]}
+  else if (dam_name[dam_nu]=='1'){
+  MR_Q_out<-DamQDaily[DamQDaily$Date==flame_date,c(dam_name[dam_nu+1]) ] - InputChemistry$Q[InputChemistry$poolInterval==dam_nu+1]
+  }
+  else {
+    MR_Q_out<-DamQDaily[DamQDaily$Date==flame_date,c(dam_name[dam_nu]) ]
+  }
   # If Triburary exists in pool
   if (dam_nu %in% InputChemistry$poolInterval){
     
@@ -412,7 +420,7 @@ for (dam_nu in 1:length(dam_km)){
     #Miss River Metrics
     MR_NO3in<-median(sub$NITRATEM[1:10], na.rm=T)
     MR_Turbin<-median(sub2$TurbFNU[1:20], na.rm=T)
-    MR_Q<-DamQDaily[DamQDaily$Date==flame_date,c(dam_name[dam_nu]) ]
+    MR_Q_in<- pool_summary[dam_nu-1,13]
     
     #Tributary Metrics
     Trib_NO3in<- InputChemistry$NITRATEMG[InputChemistry$poolInterval==dam_nu]
@@ -420,10 +428,10 @@ for (dam_nu in 1:length(dam_km)){
     Trib_Q<- InputChemistry$Q[InputChemistry$poolInterval==dam_nu]
       
     #NO3 initial
-    pool_summary[dam_nu,5] <- ((Trib_NO3in*Trib_Q) + (MR_NO3in*MR_Q)) / (MR_Q+Trib_Q)
+    pool_summary[dam_nu,5] <- ((Trib_NO3in*Trib_Q) + (MR_NO3in*MR_Q_in)) / (MR_Q_in+Trib_Q)
     #Turb initial
-    pool_summary[dam_nu,8]<- ((Trib_Turbin*Trib_Q) + (MR_Turbin*MR_Q)) / (MR_Q+Trib_Q)
-    
+    pool_summary[dam_nu,8]<- ((Trib_Turbin*Trib_Q) + (MR_Turbin*MR_Q_in)) / (MR_Q_in+Trib_Q)
+
   }
   else{
     #NO3 initial
@@ -444,11 +452,14 @@ for (dam_nu in 1:length(dam_km)){
   pool_summary[dam_nu,10]<- pool_summary[dam_nu,8] - pool_summary[dam_nu,9]
   #Turb Retention (0-1)
   pool_summary[dam_nu,12]<-pool_summary[dam_nu,10]/pool_summary[dam_nu,8]
-  
+  #Discharge out (cms)
+  pool_summary[dam_nu,13]<-MR_Q_out
   print(dam_name[dam_nu])
 }
 print(pool_summary)
 hist(pool_summary$RNO3)
 
   
-
+bathy_df
+summary_df
+pool_summary
