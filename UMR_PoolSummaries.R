@@ -5,6 +5,8 @@ library(rgdal)
 library(rgeos)
 library(plyr)
 library(maptools)
+library(dataRetrieval)
+library(zoo)
 # Code to calculate surface area, volume, for each of the Upper Mississippi River pools
 
 
@@ -167,8 +169,148 @@ print(bathy_df)
 
 write.table(bathy_df, "UMR_Pool_Volumes.csv", sep=",", row.names=F, col.names=T)
 
+# ==============================
+# Step 3
+# Determine discharge for sample events
+# ==============================
 
-# unique_gridcodes<-unique(grid_codes)
-# unique_depths<-unique(depths)
-# unique_depth_table<-data.frame(unique_gridcodes, unique_depths)
+
+parameterCd <- c("00060", "99133") # Discharge, NO3
+startDate <- "2015-08-01"
+endDate <- "2015-08-14"
+
+# Get USGS gauge data for all UMR stations.
+siteNumbers<-c('05288930', # Franklin
+               '05331000', # St. Paul *** (pools 1)
+               '05331580', # Hastings (LD 2) *** (pools 2-LakePepin)
+               '05344980', # Red Wing (LD 3)
+               '05355341', # Below Lake Pepin
+               '05378500', # Winona (LD 5a) *** (pools 4-9)
+               '05389500', # McGregor
+               '05411500', # Clayton
+               '05420400', # Fulton(LD 13)
+               '05420500', # Clinton *** (pools 10-15)
+               '05474500', # Keokuk (LD 19) *** (pools 16-19)
+               '05501600', # Hannibal
+               '05587450', # At Grafton *** (pools 20-25)
+               '05587455', # Below Grafton 
+               '05587498', # Alton (LD 26)
+               '07010000', # St. Louis ***
+               '07020500', # Chester ***
+               '07020850', # Cape Girardeau
+               '07022000', # Thebes ***
+               '370000089122601', # Above Cairo
+               '365730089063001' # Below Cairo
+) 
+
+siteINFO<-readNWISsite(siteNumbers)
+dailyDataAvailable <- whatNWISdata(siteNumbers, service="uv")
+
+dischargeUnit <- readNWISdv(siteNumbers, parameterCd, startDate, endDate)
+dischargeUnit <- renameNWISColumns(dischargeUnit)
+
+# Convert to cubic meter per second 
+dischargeUnit$Flow_cms<-dischargeUnit$Flow /35.3147
+
+
+#Illinois River gauge data
+ILsiteNumbers<-c("05586100", #Valley City IL
+                 "05586300") #Florence, IL
+
+
+ILDischarge<-readNWISdv(ILsiteNumbers, parameterCd, startDate, endDate)
+ILDischarge <- renameNWISColumns(ILDischarge)
+ILDischarge$Flow_cms<-ILDischarge$Flow /35.3147
+
+#Calculate Discharge for pool 26 (Miss River at Grafton plus IL)
+AltonDischarge<-merge(dischargeUnit[which(dischargeUnit$site_no=="05587450"),], ILDischarge[which(ILDischarge$site_no=="05586100"),], by="Date")
+AltonDischarge$Flow_cms<- (AltonDischarge$Flow_cms.x + AltonDischarge$Flow_cms.y)
+AltonDischarge$site_no<-9999
+
+#Check to make sure it looks correct
+plot(AltonDischarge$Flow_cms, ylim=c(0, max(AltonDischarge$Flow_cms)))
+points(AltonDischarge$Flow_cms.x, col="red")
+points(AltonDischarge$Flow_cms.y, col="blue")
+
+dischargeUnit<-smartbind(dischargeUnit, AltonDischarge)
+
+#Load Flame data
+setwd("E:/Dropbox/ArcGIS")
+
+data<-read.table('UMR_AllDays_Route2.txt', header=TRUE, sep="," ,skip=0)
+data$riverkm<-data$MEAS/1000
+data<-data[order(data$MEAS),]
+data[data==0] <- NA
+data$ltime<-as.POSIXct(data$ltime, format="%Y-%m-%d %H:%M:%S", tz="America/Chicago")
+
+NO3data<-data[!is.na(data$NITRATEM),]
+NO3data$rollNO3<-rollmean(NO3data$NITRATEM, k=25, align='center', fill=NA)
+
+Turbdata<-data[!is.na(data$TurbFNU),]
+Turbdata$rollTurb<-rollmean(Turbdata$TurbFNU, k=10, align='center', fill=NA)
+
+plot(NO3data$NITRATEM)
+lines(NO3data$rollNO3, type="l", col="red")
+
+#Load dam data
+dams<-read.csv('DamsAlongRoute3.csv', sep=",", header=TRUE)
+dams$riverkm<-dams$MEAS/1000
+dams<-dams[order(dams$MEAS, decreasing=FALSE),]
+dams$name<-c('SAF-U', 'SAF-L', 1,2,3,4,5,'5a', 6,7,8,9,10,11,12,13,14,15,16,17,18, 19, 20, 21, 22, 24, 25, '26')
+
+dams1<-dams[dams$riverkm>10,]
+Pepindam<-as.data.frame(matrix(nrow=1, ncol=ncol(dams1)))
+names(Pepindam)=names(dams1)
+Pepindam[1,c(2,(ncol(Pepindam)-1):ncol(Pepindam))]<-c(148500 , 148.5, "PepinOutlet")
+
+dams2<-rbind(dams1, Pepindam)
+dams2$riverkm<-as.numeric(dams2$riverkm)
+dams2$MEAS<-as.numeric(dams2$MEAS)
+dams2<-dams2[order(dams2$riverkm, decreasing=FALSE),]
+
+dam_km<-dams2$riverkm
+dam_name<-dams2$name
+
+
+# start Loop here
+# Make list and data frame to fill with data
+flamedata_list<-list()
+flamedata_list2<-flamedata_list
+pool_summary<-as.data.frame(matrix(nrow=length(dam_name), ncol=10))
+names(pool_summary)<-(c("Pool", "RiverKM_start", "RiverKM_end","Pool_length", "NO3_start", "NO3_end", "dNO3", "Turb_start", "Turb_end", "dTurb"))
+
+dam_nu<-1
+for (dam_nu in 1:length(dam_km)){
+  if (dam_nu==1){
+    sub<-NO3data[NO3data$riverkm<dam_km[dam_nu],]
+    sub2<-Turbdata[Turbdata$riverkm<dam_km[dam_nu],]
+  }
+  else {
+  sub<-NO3data[NO3data$riverkm<dam_km[dam_nu] & NO3data$riverkm>dam_km[dam_nu-1], ]
+  sub2<-Turbdata[Turbdata$riverkm<dam_km[dam_nu] & Turbdata$riverkm>dam_km[dam_nu-1], ] 
+  }
+  flamedata_list[[dam_nu]]<-sub
+  flamedata_list2[[dam_nu]]<-sub2
+  names(flamedata_list)[[dam_nu]]<-dam_name[dam_nu]
+  names(flamedata_list2)[[dam_nu]]<-dam_name[dam_nu]
   
+  #Distance
+  pool_summary[dam_nu,1]<-dam_name[dam_nu]
+  pool_summary[dam_nu,2:3]<-range(sub$riverkm)
+  pool_summary[dam_nu,4]<-pool_summary[dam_nu,3] - pool_summary[dam_nu,2]
+  #NO3
+  pool_summary[dam_nu,5]<-median(sub$NITRATEM[1:10], na.rm=T)
+  pool_summary[dam_nu,6]<-median(sub$NITRATEM[(length(sub$NITRATEM)-9):length(sub$NITRATEM)], na.rm=T)
+  pool_summary[dam_nu,7]<-pool_summary[dam_nu,6] - pool_summary[dam_nu,5]
+  #Turb
+  pool_summary[dam_nu,8]<-median(sub2$TurbFNU[1:20], na.rm=T)
+  pool_summary[dam_nu,9]<-median(sub2$TurbFNU[(length(sub2$TurbFNU)-19):length(sub2$TurbFNU)], na.rm=T)
+  pool_summary[dam_nu,10]<-pool_summary[dam_nu,9] - pool_summary[dam_nu,8]
+  
+  print(dam_name[dam_nu])
+}
+print(pool_summary)
+  
+# str(flamedata_list)
+
+
