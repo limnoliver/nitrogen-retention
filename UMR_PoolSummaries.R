@@ -9,10 +9,22 @@ library(dataRetrieval)
 library(zoo)
 # Code to calculate surface area, volume, for each of the Upper Mississippi River pools
 
-
+# Get Lake Pepin Shapefile
 setwd("E:/Dropbox/FLAME/basemaps/shapefiles")
-
 Pepinshape<-readOGR(getwd(), "LakePepin", stringsAsFactors = F)
+
+# Get Dam Discharge Data
+setwd("E:/Dropbox/FLAME_MississippiRiver")
+DamQ<-read.csv('USACE_Discharge_StPaulDams2015.csv', header=T, skip=6, stringsAsFactors = F)
+DamQ$DateTime<-as.POSIXct(DamQ$X, format="%d%b%Y  %H%M", tz="America/Chicago")
+DamQ<-DamQ[!is.na(DamQ$DateTime),]
+DamQ$Date<-as.Date(DamQ$X, format="%d%b%Y")
+
+DamQDaily<-aggregate(DamQ[,3:13], by=list(DamQ$Date), FUN="mean")
+names(DamQDaily)[1]<-"Date"
+
+#convert to cms
+DamQDaily[,2:ncol(DamQDaily)]<-DamQDaily[,2:ncol(DamQDaily)]/35.3147
 
 
 dir1<-(paste(getwd(), "/USGS_AquaticAreas", sep=""))
@@ -343,7 +355,7 @@ lines(NO3data$rollNO3, type="l", col="red")
 dams<-read.csv('DamsAlongRoute3.csv', sep=",", header=TRUE)
 dams$riverkm<-dams$MEAS/1000
 dams<-dams[order(dams$MEAS, decreasing=FALSE),]
-dams$name<-c('SAF-U', 'SAF-L', 1,2,3,4,5,'5a', 6,7,8,9,10,11,12,13,14,15,16,17,18, 19, 20, 21, 22, 24, 25, '26')
+dams$name<-c('SAF-U', 'SAF-L', 1,2,3,4,5,'5A', 6,7,8,9,10,11,12,13,14,15,16,17,18, 19, 20, 21, 22, 24, 25, '26')
 
 dams1<-dams[dams$riverkm>10,]
 Pepindam<-as.data.frame(matrix(nrow=1, ncol=ncol(dams1)))
@@ -358,11 +370,12 @@ dams2<-dams2[order(dams2$riverkm, decreasing=FALSE),]
 dam_km<-dams2$riverkm
 dam_name<-dams2$name
 
-
+dams$name
+names(DamQDaily)[2:ncol(DamQDaily)]<-sub("DAM", "", names(DamQDaily)[2:ncol(DamQDaily)])
 
 #Calculate dNO3 and Turb
 
-InputChemistry$poolInterval<-findInterval(InputChemistry$riverkm, vec=dam_km )
+InputChemistry$poolInterval<-findInterval(InputChemistry$riverkm, vec=c(0,dam_km) )
 
 # start Loop here
 # Make list and data frame to fill with data
@@ -381,6 +394,7 @@ for (dam_nu in 1:length(dam_km)){
     sub<-NO3data[NO3data$riverkm<dam_km[dam_nu] & NO3data$riverkm>dam_km[dam_nu-1], ]
     sub2<-Turbdata[Turbdata$riverkm<dam_km[dam_nu] & Turbdata$riverkm>dam_km[dam_nu-1], ] 
   }
+  flame_date<-median(as.Date(sub$ltime))
   flamedata_list[[dam_nu]]<-sub
   flamedata_list2[[dam_nu]]<-sub2
   names(flamedata_list)[[dam_nu]]<-dam_name[dam_nu]
@@ -398,7 +412,7 @@ for (dam_nu in 1:length(dam_km)){
     #Miss River Metrics
     MR_NO3in<-median(sub$NITRATEM[1:10], na.rm=T)
     MR_Turbin<-median(sub2$TurbFNU[1:20], na.rm=T)
-    MR_Q<-
+    MR_Q<-DamQDaily[DamQDaily$Date==flame_date,c(dam_name[dam_nu]) ]
     
     #Tributary Metrics
     Trib_NO3in<- InputChemistry$NITRATEMG[InputChemistry$poolInterval==dam_nu]
@@ -408,7 +422,7 @@ for (dam_nu in 1:length(dam_km)){
     #NO3 initial
     pool_summary[dam_nu,5] <- ((Trib_NO3in*Trib_Q) + (MR_NO3in*MR_Q)) / (MR_Q+Trib_Q)
     #Turb initial
-    pool_summary[dam_nu,8]<-
+    pool_summary[dam_nu,8]<- ((Trib_Turbin*Trib_Q) + (MR_Turbin*MR_Q)) / (MR_Q+Trib_Q)
     
   }
   else{
