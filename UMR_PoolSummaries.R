@@ -255,6 +255,7 @@ TsiteNumbers<-c("05330920",#Minnesota River
                 "05383075",#LaCrosse River
                 "05385000",#Root River Main
                 "05385500",#Root River South
+                "05388250",#Upper Iowa River
                 "05407000",#Wisconsin River
                 "05418720",#Maquoketa River
                 "05446500",#Rock River
@@ -272,6 +273,7 @@ TribNames<-c('Minnesota River',
              'LaCrosse River',
              'Root River Main',
              'Root River South',
+             'Upper Iowa River',
              'Wisconsin River',
              'Maquoketa River',
              'Rock River',
@@ -421,11 +423,17 @@ for (dam_nu in 1:length(dam_km)){
   # If Triburary exists in pool
   if (dam_nu %in% InputChemistry$poolInterval){
     
-    # Do something to calculate flow weighted concentrations
     #Miss River Metrics
     MR_NO3in<-median(sub$NITRATEM[1:10], na.rm=T)
     MR_Turbin<-median(sub2$TurbFNU[1:20], na.rm=T)
     MR_Q_in<- pool_summary[dam_nu-1,13]
+    
+    #Use Water Chem table for Pool 8 metrics
+    #flame data are bad because we sampled this stretch 3 times over 2 days
+    if (dam_name[dam_nu]=='8'){
+      MR_NO3in<-0.78
+      MR_Turbin<-9.01
+    }   
     
     #Tributary Metrics
     Trib_NO3in<- InputChemistry$NITRATEMG[InputChemistry$poolInterval==dam_nu]
@@ -447,12 +455,18 @@ for (dam_nu in 1:length(dam_km)){
   
   #NO3 final
   pool_summary[dam_nu,6]<-median(sub$NITRATEM[(length(sub$NITRATEM)-9):length(sub$NITRATEM)], na.rm=T)
+  #Turb final
+  pool_summary[dam_nu,9]<-median(sub2$TurbFNU[(length(sub2$TurbFNU)-19):length(sub2$TurbFNU)], na.rm=T)
+
+  if (dam_name[dam_nu]=='8'){
+    pool_summary[dam_nu,6]<-0.768
+    pool_summary[dam_nu,9]<-6.46
+  } 
   #NO3 change
   pool_summary[dam_nu,7]<- pool_summary[dam_nu,5] - pool_summary[dam_nu,6]
   #NO3 Retention (0-1)
   pool_summary[dam_nu,11]<-pool_summary[dam_nu,7]/pool_summary[dam_nu,5]
-  #Turb final
-  pool_summary[dam_nu,9]<-median(sub2$TurbFNU[(length(sub2$TurbFNU)-19):length(sub2$TurbFNU)], na.rm=T)
+  
   #Turb change
   pool_summary[dam_nu,10]<- pool_summary[dam_nu,8] - pool_summary[dam_nu,9]
   #Turb Retention (0-1)
@@ -466,7 +480,7 @@ for (dam_nu in 1:length(dam_km)){
 pool_summary$Pool[pool_summary$Pool!='Pepin'& !is.na(pool_summary$Pool)]<-paste("p", pool_summary$Pool[pool_summary$Pool!='Pepin'& !is.na(pool_summary$Pool)], sep="")
 
 print(pool_summary)
-hist(pool_summary$RNO3)
+hist(pool_summary$RNO3, breaks=15)
 
 # ==============================
 # Step 5 
