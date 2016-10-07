@@ -510,3 +510,4 @@ names(merge2)[names(merge2) == 'Q'] <- 'Q_cms'
 setwd('E:/Dropbox/FLAME_MississippiRiver')
 write.table(merge2, "UMR_Pool_Summary_Table.csv", sep=",", row.names=F, col.names=T)
 
+plot(merge2$RNO3, merge2$RiverKM_start)
