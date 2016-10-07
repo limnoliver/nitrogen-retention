@@ -118,10 +118,10 @@ dev.off()
 setwd("E:/Dropbox/FLAME_MississippiRiver")
 
 # Set parameter estimates; (Lake Pepin and Pool 8, examples)
-pool_names<-c("Lake Pepin","Lake Pepin", "Pool 8", "Pool 22")
-z = c(4.5,4.5, 1.7, 3) #mean depth (m)
-tau = c(13.05,9, 1.7, 0.5)/365 #WRT (Years)
-R = c(0.474719,0.513, 0.06, NA)
+pool_names<-c("Lake Pepin", "Pool 8", "Pool 22")
+z = c(6, 1.5, 3.3) #mean depth (m)
+tau = c(13.05, 2.18, 0.5)/365 #WRT (Years)
+R = c(0.474719, 0.15, NA)
 
 vfrange<-c(0, 3) #log scale (m yr-1)
 
