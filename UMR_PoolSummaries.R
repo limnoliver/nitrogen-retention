@@ -533,7 +533,9 @@ merge2$WRT_d<-merge2$Volume/merge2$Q*(1000000/3600/24) #days
 merge2$Z_mean_m<-merge2$Volume/merge2$TotalArea
 
 merge2$Vf<-((-1)*merge2$Z_mean_m/merge2$WRT_d*365 * log(1-merge2$RNO3))
-merge2$vf50<-((-1)*merge2$Z_mean_m/merge2$WRT_d*365 * log(0.5))
+merge2$vf50<-((-1)*merge2$Z_mean_m/merge2$WRT_d*365 * log(1-0.5))
+merge2$vf20<-((-1)*merge2$Z_mean_m/merge2$WRT_d*365 * log(1-0.2))
+merge2$vf10<-((-1)*merge2$Z_mean_m/merge2$WRT_d*365 * log(1-0.1))
 
 names(merge2)[names(merge2) == 'Q'] <- 'Q_cms'
 
