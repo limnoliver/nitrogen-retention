@@ -15,8 +15,13 @@ DamQ$DateTime<-as.POSIXct(DamQ$X, format="%d%b%Y  %H%M", tz="America/Chicago")
 DamQ<-DamQ[!is.na(DamQ$DateTime),]
 DamQ$Date<-as.Date(DamQ$X, format="%d%b%Y")
 
-DamQDaily<-aggregate(DamQ[,3:13], by=list(DamQ$Date), FUN="mean")
-names(DamQDaily)[1]<-"Date"
+DamQDaily1<-aggregate(DamQ[,3:13], by=list(DamQ$Date), FUN="mean")
+names(DamQDaily1)[1]<-"Date"
+
+DamQ_Rock<-read.csv('USACE_Discharge_RockIslandDams2015.csv', header=T, skip=0, stringsAsFactors = F)
+DamQ_Rock$Date<-as.Date(DamQ_Rock$Date, format="%Y-%m-%d")
+
+DamQDaily<-merge(DamQDaily1, DamQ_Rock, by="Date", all=T)
 
 #convert to cms
 DamQDaily[,2:ncol(DamQDaily)]<-DamQDaily[,2:ncol(DamQDaily)]/35.3147
@@ -200,9 +205,9 @@ endDate <- "2015-08-14"
 siteNumbers<-c('05331000', # St. Paul *** (pools 1)
                '05331580', # Hastings (LD 2) *** (pools 2-LakePepin)
                '05378500', # Winona (LD 5a) *** (pools 4-9)
-               '05420500', # Clinton *** (pools 10-15)
+               '05420500', # Clinton LD 13) *** (pools 10-15)
                '05474500', # Keokuk (LD 19) *** (pools 16-19)
-               '05587450', # At Grafton *** (pools 20-25)
+               '05587450', # At Grafton (LD 26)*** (pools 20-25)
                '07010000', # St. Louis ***
                '07020500', # Chester ***
                '07022000', # Thebes ***
@@ -503,11 +508,11 @@ merge2$WRT_d<-merge2$Volume/merge2$Q*(1000000/3600/24) #days
 merge2$Z_mean_m<-merge2$Volume/merge2$TotalArea
 
 merge2$Vf<-((-1)*merge2$Z_mean_m/merge2$WRT_d*365 * log(1-merge2$RNO3))
-
+merge2$vf50<-((-1)*merge2$Z_mean_m/merge2$WRT_d*365 * log(0.5))
 
 names(merge2)[names(merge2) == 'Q'] <- 'Q_cms'
 
 setwd('E:/Dropbox/FLAME_MississippiRiver')
 write.table(merge2, "UMR_Pool_Summary_Table.csv", sep=",", row.names=F, col.names=T)
 
-plot(merge2$RNO3, merge2$RiverKM_start)
+
