@@ -116,12 +116,16 @@ dev.off()
 # Different from above in that it only plots one curve for each Pool, rather than looping through all possable z and tau
 # =============================
 setwd("E:/Dropbox/FLAME_MississippiRiver")
+Pooldata<-read.csv("UMR_Pool_Summary_Table.csv", header=T, stringsAsFactors = F)
+Modeldata<-Pooldata[!is.na(Pooldata$Volume), ]
+Modeldata<-Pooldata[Pooldata$Pool %in% c("Pepin", "p8", "p26"), ]
 
 # Set parameter estimates; (Lake Pepin and Pool 8, examples)
-pool_names<-c("Lake Pepin", "Pool 8", "Pool 22")
-z = c(6, 1.5, 3.3) #mean depth (m)
-tau = c(13.05, 2.18, 0.5)/365 #WRT (Years)
-R = c(0.474719, 0.15, NA)
+pool_names<-sub("p", "Pool ", Modeldata$Pool)
+pool_names<-sub("PePool in", "Pepin", pool_names)
+z = Modeldata$Z_mean_m #mean depth (m)
+tau = round(Modeldata$WRT_d,digits=2) /365 #WRT (Years)
+R = Modeldata$RNO3
 
 vfrange<-c(0, 3) #log scale (m yr-1)
 
@@ -168,7 +172,7 @@ for (i in 1:(length(z))){
 
 }
 
-legend("topleft", inset=0.02, lwd = 2,legend = paste(pool_names, " (", tau*365, " d)", sep=""), col = table[,3], lty=1)
+legend("topleft", inset=0.02, lwd = 2,legend = paste(pool_names, " (", tau*365, " d)", sep=""), col = table[,3], lty=1, cex=0.8)
 
 box(which='plot')
 
