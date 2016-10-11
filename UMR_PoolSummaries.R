@@ -21,7 +21,16 @@ names(DamQDaily1)[1]<-"Date"
 DamQ_Rock<-read.csv('USACE_Discharge_RockIslandDams2015.csv', header=T, skip=0, stringsAsFactors = F)
 DamQ_Rock$Date<-as.Date(DamQ_Rock$Date, format="%Y-%m-%d")
 
+DamQ_StLouis<-read.csv('USACE_Discharge_StLouisDams2015.csv', header=T, skip=0, stringsAsFactors = F)
+DamQ_StLouis$DateTime<-as.POSIXct(DamQ_StLouis$X, format="%d%b%Y  %H%M", tz="America/Chicago")
+DamQ_StLouis<-DamQ_StLouis[!is.na(DamQ_StLouis$DateTime),]
+DamQ_StLouis$Date<-as.Date(DamQ_StLouis$X, format="%d%b%Y")
+
+DamQDaily3<-aggregate(DamQ_StLouis[,2:4], by=list(DamQ_StLouis$Date), FUN="mean")
+names(DamQDaily3)[1]<-"Date"
+
 DamQDaily<-merge(DamQDaily1, DamQ_Rock, by="Date", all=T)
+DamQDaily<-merge(DamQDaily,DamQDaily3, by="Date", all=T)
 
 #convert to cms
 DamQDaily[,2:ncol(DamQDaily)]<-DamQDaily[,2:ncol(DamQDaily)]/35.3147
@@ -97,6 +106,7 @@ summary_df$Pool<-sub("5a", "5A", summary_df$Pool)
 summary_df$Pool<-sub("p0", "p", summary_df$Pool)
 summary_df<-summary_df[!is.na(summary_df$TotalArea),]
 summary_df<-subset(summary_df, select=-LP_Area)
+summary_df<-summary_df[-grep("or", summary_df$Pool),]
 
 unique_codes<-unique(all_codes)
 unique_desc<-unique(all_desc)
@@ -199,13 +209,13 @@ write.table(bathy_df, "UMR_Pool_Volumes.csv", sep=",", row.names=F, col.names=T)
 
 parameterCd <- c("00060", "99133") # Discharge, NO3
 startDate <- "2015-08-01"
-endDate <- "2015-08-14"
+endDate <- "2015-08-31"
 
 # Get USGS gauge data for all UMR stations.
 siteNumbers<-c('05331000', # St. Paul *** (pools 1)
                '05331580', # Hastings (LD 2) *** (pools 2-LakePepin)
                '05378500', # Winona (LD 5a) *** (pools 4-9)
-               '05420500', # Clinton LD 13) *** (pools 10-15)
+               '05420500', # Clinton (LD 13) *** (pools 10-15)
                '05474500', # Keokuk (LD 19) *** (pools 16-19)
                '05587450', # At Grafton (LD 26)*** (pools 20-25)
                '07010000', # St. Louis ***
@@ -245,7 +255,7 @@ points(AltonDischarge$Flow_cms.x, col="red")
 points(AltonDischarge$Flow_cms.y, col="blue")
 
 dischargeUnit<-smartbind(dischargeUnit, AltonDischarge)
-
+dischargeUnit$Date<-as.Date(dischargeUnit$Date)
 
 
 # ==================================
@@ -337,6 +347,27 @@ InputChemistry<-TribChemistry2[TribChemistry2$Sample.Notes %in% Inputs,]
 
 InputChemistry$riverkm<-tribs$riverkm[match(Inputs,tribs$NAME)]
 
+#Make Table of flow for each pool
+
+AugQDaily<-subset(DamQDaily, Date>=startDate & Date<=endDate)
+names(AugQDaily)<-sub("DAM", "", names(AugQDaily))
+AugQDaily$Pepin<-AugQDaily$'3'
+AugQDaily$'15'<-AugQDaily$'14'
+
+Pool1<-dischargeUnit[dischargeUnit$site_no=='05331000', c('Date', 'Flow_cms')]
+Pool2<-dischargeUnit[dischargeUnit$site_no=='05331580', c('Date', 'Flow_cms')]
+Pool5A<-dischargeUnit[dischargeUnit$site_no=='05378500', c('Date', 'Flow_cms')]
+Pool13<-dischargeUnit[dischargeUnit$site_no=='05420500', c('Date', 'Flow_cms')]
+Pool19<-dischargeUnit[dischargeUnit$site_no=='05474500', c('Date', 'Flow_cms')]
+Pool26<-dischargeUnit[dischargeUnit$site_no=='05587450', c('Date', 'Flow_cms')]
+
+
+AugQDaily$'1' <-Pool1$Flow_cms[match(AugQDaily$Date, Pool1$Date)]
+AugQDaily$'2' <-Pool2$Flow_cms[match(AugQDaily$Date, Pool2$Date)]
+AugQDaily$'5A' <-Pool5A$Flow_cms[match(AugQDaily$Date, Pool5A$Date)]
+AugQDaily$'13' <-Pool13$Flow_cms[match(AugQDaily$Date, Pool13$Date)]
+AugQDaily$'19' <-Pool19$Flow_cms[match(AugQDaily$Date, Pool19$Date)]
+AugQDaily$'26' <-Pool26$Flow_cms[match(AugQDaily$Date, Pool26$Date)]
 
 # =================================
 # Step 4
@@ -382,7 +413,7 @@ dam_km<-dams2$riverkm
 dam_name<-dams2$name
 
 dams$name
-names(DamQDaily)[2:ncol(DamQDaily)]<-sub("DAM", "", names(DamQDaily)[2:ncol(DamQDaily)])
+
 
 
 #Indicate which rows have tributaries entering
@@ -417,14 +448,8 @@ for (dam_nu in 1:length(dam_km)){
   pool_summary[dam_nu,2:3]<-range(sub$riverkm)
   pool_summary[dam_nu,4]<-pool_summary[dam_nu,3] - pool_summary[dam_nu,2]
   
-  if (dam_name[dam_nu]=='Pepin'){
-    MR_Q_out<-DamQDaily[DamQDaily$Date==flame_date,c('3')]}
-  else if (dam_name[dam_nu]=='1'){
-  MR_Q_out<-DamQDaily[DamQDaily$Date==flame_date,c(dam_name[dam_nu+1]) ] - InputChemistry$Q[InputChemistry$poolInterval==dam_nu+1]
-  }
-  else {
-    MR_Q_out<-DamQDaily[DamQDaily$Date==flame_date,c(dam_name[dam_nu]) ]
-  }
+  MR_Q_out<-AugQDaily[AugQDaily$Date==flame_date,c(dam_name[dam_nu])]
+  
   # If Triburary exists in pool
   if (dam_nu %in% InputChemistry$poolInterval){
     
@@ -485,7 +510,7 @@ for (dam_nu in 1:length(dam_km)){
 pool_summary$Pool[pool_summary$Pool!='Pepin'& !is.na(pool_summary$Pool)]<-paste("p", pool_summary$Pool[pool_summary$Pool!='Pepin'& !is.na(pool_summary$Pool)], sep="")
 
 print(pool_summary)
-hist(pool_summary$RNO3, breaks=15)
+hist(pool_summary$RNO3, breaks=100)
 
 # ==============================
 # Step 5 
