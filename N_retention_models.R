@@ -130,7 +130,7 @@ R = Modeldata$RNO3
 vfrange<-c(0, 3) #log scale (m yr-1)
 
 # plot curve
-png("N_Model/N_retention_WRR.png", res=200, width=4,height=4, units="in")
+png("E:/Dropbox/FLAME_MississippiRiver/N_Model/N_retention_WRR.png", res=200, width=4,height=4, units="in")
 par(cex=1)
 par(mfrow=c(1,1))
 par(mar=c(4,4,0.5,0.5), oma=c(0,0,0,0))
