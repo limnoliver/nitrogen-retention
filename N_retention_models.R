@@ -115,8 +115,8 @@ dev.off()
 # Model for WRR publication
 # Different from above in that it only plots one curve for each Pool, rather than looping through all possable z and tau
 # =============================
-setwd("E:/Dropbox/FLAME_MississippiRiver")
-Pooldata<-read.csv("UMR_Pool_Summary_Table.csv", header=T, stringsAsFactors = F)
+Pooldata<-readRDS(file = "UMR_Pool_Summary_Table.rds")
+
 Modeldata<-Pooldata[!is.na(Pooldata$Volume), ]
 Modeldata<-Pooldata[Pooldata$Pool %in% c("Pepin", "p8", "p26"), ]
 

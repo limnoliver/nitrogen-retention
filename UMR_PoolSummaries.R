@@ -214,6 +214,7 @@ endDate <- "2015-08-31"
 # Get USGS gauge data for all UMR stations.
 siteNumbers<-c('05331000', # St. Paul *** (pools 1)
                '05331580', # Hastings (LD 2) *** (pools 2-LakePepin)
+               '05344500', # Prescot (LD 3) - below St. Croix
                '05378500', # Winona (LD 5a) *** (pools 4-9)
                '05420500', # Clinton (LD 13) *** (pools 10-15)
                '05474500', # Keokuk (LD 19) *** (pools 16-19)
@@ -351,23 +352,26 @@ InputChemistry$riverkm<-tribs$riverkm[match(Inputs,tribs$NAME)]
 
 AugQDaily<-subset(DamQDaily, Date>=startDate & Date<=endDate)
 names(AugQDaily)<-sub("DAM", "", names(AugQDaily))
-AugQDaily$Pepin<-AugQDaily$'3'
-AugQDaily$'15'<-AugQDaily$'14'
+
 
 Pool1<-dischargeUnit[dischargeUnit$site_no=='05331000', c('Date', 'Flow_cms')]
 Pool2<-dischargeUnit[dischargeUnit$site_no=='05331580', c('Date', 'Flow_cms')]
+Pool3<-dischargeUnit[dischargeUnit$site_no=='05344500', c('Date', 'Flow_cms')]
 Pool5A<-dischargeUnit[dischargeUnit$site_no=='05378500', c('Date', 'Flow_cms')]
 Pool13<-dischargeUnit[dischargeUnit$site_no=='05420500', c('Date', 'Flow_cms')]
 Pool19<-dischargeUnit[dischargeUnit$site_no=='05474500', c('Date', 'Flow_cms')]
 Pool26<-dischargeUnit[dischargeUnit$site_no=='05587450', c('Date', 'Flow_cms')]
 
-
 AugQDaily$'1' <-Pool1$Flow_cms[match(AugQDaily$Date, Pool1$Date)]
 AugQDaily$'2' <-Pool2$Flow_cms[match(AugQDaily$Date, Pool2$Date)]
+AugQDaily$'3' <-Pool3$Flow_cms[match(AugQDaily$Date, Pool3$Date)]
 AugQDaily$'5A' <-Pool5A$Flow_cms[match(AugQDaily$Date, Pool5A$Date)]
 AugQDaily$'13' <-Pool13$Flow_cms[match(AugQDaily$Date, Pool13$Date)]
 AugQDaily$'19' <-Pool19$Flow_cms[match(AugQDaily$Date, Pool19$Date)]
 AugQDaily$'26' <-Pool26$Flow_cms[match(AugQDaily$Date, Pool26$Date)]
+
+AugQDaily$Pepin<-AugQDaily$'3'
+AugQDaily$'15'<-AugQDaily$'14'
 
 # =================================
 # Step 4
@@ -542,4 +546,6 @@ names(merge2)[names(merge2) == 'Q'] <- 'Q_cms'
 setwd('E:/Dropbox/FLAME_MississippiRiver')
 write.table(merge2, "UMR_Pool_Summary_Table.csv", sep=",", row.names=F, col.names=T)
 
+setwd("E:/Git_Repo/nitrogen-retention")
+saveRDS(merge2, file = "UMR_Pool_Summary_Table.rds")
 
