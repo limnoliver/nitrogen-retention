@@ -112,14 +112,17 @@ unique_codes<-unique(all_codes)
 unique_desc<-unique(all_desc)
 unique_table<-data.frame(unique_codes, unique_desc)
 
+#Save outputs
 write.table(summary_df, "UMR_Pool_Areas.csv", sep=",", row.names=F, col.names=T)
+setwd("E:/Git_Repo/nitrogen-retention")
+saveRDS(summary_df, file = "UMR_Pool_Areas.rds")
 
 
 # ===========================================
 # Step 2
 # Calculate Volume for pools with Bathy data
 # ===========================================
-
+setwd("E:/Dropbox/FLAME/basemaps/shapefiles")
 
 dir2<-(paste(getwd(), "/USGS_Bathy", sep=""))
 dir2_files<-list.files(dir2)
@@ -200,7 +203,11 @@ bathy_df[,2]<-round(bathy_df[,2], digits=1)
 
 print(bathy_df)
 
+#Save outputs
 write.table(bathy_df, "UMR_Pool_Volumes.csv", sep=",", row.names=F, col.names=T)
+setwd("E:/Git_Repo/nitrogen-retention")
+saveRDS(bathy_df, file = "UMR_Pool_Volumes.rds")
+
 
 # ==============================
 # Step 3
@@ -235,28 +242,6 @@ dischargeUnit <- renameNWISColumns(dischargeUnit)
 # Convert to cubic meter per second 
 dischargeUnit$Flow_cms<-dischargeUnit$Flow /35.3147
 
-
-#Illinois River gauge data
-ILsiteNumbers<-c("05586100", #Valley City IL
-                 "05586300") #Florence, IL
-
-
-ILDischarge<-readNWISdv(ILsiteNumbers, parameterCd, startDate, endDate)
-ILDischarge <- renameNWISColumns(ILDischarge)
-ILDischarge$Flow_cms<-ILDischarge$Flow /35.3147
-
-#Calculate Discharge for pool 26 (Miss River at Grafton plus IL)
-AltonDischarge<-merge(dischargeUnit[which(dischargeUnit$site_no=="05587450"),], ILDischarge[which(ILDischarge$site_no=="05586100"),], by="Date")
-AltonDischarge$Flow_cms<- (AltonDischarge$Flow_cms.x + AltonDischarge$Flow_cms.y)
-AltonDischarge$site_no<-9999
-
-#Check to make sure it looks correct
-plot(AltonDischarge$Flow_cms, ylim=c(0, max(AltonDischarge$Flow_cms)))
-points(AltonDischarge$Flow_cms.x, col="red")
-points(AltonDischarge$Flow_cms.y, col="blue")
-
-dischargeUnit<-smartbind(dischargeUnit, AltonDischarge)
-dischargeUnit$Date<-as.Date(dischargeUnit$Date)
 
 
 # ==================================
@@ -323,7 +308,11 @@ tribs<-tribs[order(tribs$MEAS, decreasing=FALSE),]
 
 tribs$name2<-c("MN", "SC", "Ch", "Bl", "Rt", "WI", "Rk", "IA", "DM", "IL", "MO", "OH")
 tribs2<-tribs[tribs$NAME!="Black River",]
-
+tribs_add<-tribs2[1,]
+tribs_add[1,]<-NA
+tribs_add[1,c('riverkm')]<-c(491)
+tribs_add[1, c('NAME', 'name2')]<-c("Maquoketa River", "MA")
+tribs2<-rbind(tribs2, tribs_add)
 
 setwd('E:/Dropbox/FLAME_MississippiRiver/Data/2015_UMR_AllDays')
 TribChemistry<-read.csv('UMR2015_AllWaterChemSamples.csv', header=T, stringsAsFactors = F)
@@ -343,10 +332,10 @@ for (sample in 1:nrow(TribChemistry2)){
 TribChemistry2$Sample.Notes<-sub("St.", "Saint", TribChemistry2$Sample.Notes)
 TribChemistry2$Sample.Notes<-sub("River Confluence", "River", TribChemistry2$Sample.Notes)
 
-Inputs<-intersect(tribs$NAME, TribChemistry2$Sample.Notes)
+Inputs<-intersect(tribs2$NAME, TribChemistry2$Sample.Notes)
 InputChemistry<-TribChemistry2[TribChemistry2$Sample.Notes %in% Inputs,]
 
-InputChemistry$riverkm<-tribs$riverkm[match(Inputs,tribs$NAME)]
+InputChemistry$riverkm[match(Inputs,InputChemistry$Sample.Notes)]<-tribs2$riverkm[match(Inputs,tribs2$NAME)]
 
 #Make Table of flow for each pool
 
@@ -372,6 +361,10 @@ AugQDaily$'26' <-Pool26$Flow_cms[match(AugQDaily$Date, Pool26$Date)]
 
 AugQDaily$Pepin<-AugQDaily$'3'
 AugQDaily$'15'<-AugQDaily$'14'
+
+setwd("E:/Git_Repo/nitrogen-retention")
+saveRDS(AugQDaily, file = "UMR_AugQDaily.rds")
+
 
 # =================================
 # Step 4
@@ -515,6 +508,10 @@ pool_summary$Pool[pool_summary$Pool!='Pepin'& !is.na(pool_summary$Pool)]<-paste(
 
 print(pool_summary)
 hist(pool_summary$RNO3, breaks=100)
+
+setwd("E:/Git_Repo/nitrogen-retention")
+saveRDS(pool_summary, file = "UMR_R_dNO3_estimates.rds")
+
 
 # ==============================
 # Step 5 
