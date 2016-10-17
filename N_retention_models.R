@@ -178,5 +178,31 @@ box(which='plot')
 
 dev.off()
 
+Pooldata<-Pooldata[!is.na(Pooldata$Volume),]
 
+null<-lm(Pooldata$RNO3~1)
+Model1<-lm(Pooldata$RNO3~Pooldata$I_Area + Pooldata$BWc_Area + Pooldata$WRT_d + Pooldata$NO3_start)
+summary(Model1)
+anova(Model1)
+anova(Model1)
+Model2<-step(Model1, scope=list(lower=null, upper=Model1), direction='both')
+summary(Model2)
+anova(Model2)
 
+Model_NO3<-null<-lm(Pooldata$RNO3~Pooldata$NO3_start)
+summary(Model_NO3)
+anova(Model_NO3)
+
+Model_WRT<-null<-lm(Pooldata$RNO3~Pooldata$WRT_d)
+summary(Model_WRT)
+anova(Model_WRT)
+
+Model_I<-null<-lm(Pooldata$RNO3~Pooldata$I_Area)
+summary(Model_I)
+anova(Model_I)
+
+Model_BW<-null<-lm(Pooldata$RNO3~Pooldata$BWc_Area)
+summary(Model_BW)
+anova(Model_BW)
+
+anova(Model_NO3, Model2)
