@@ -249,7 +249,8 @@ dischargeUnit$Flow_cms<-dischargeUnit$Flow /35.3147
 # ==================================
 
 #Triburary River gauge data
-TsiteNumbers<-c("05330920",#Minnesota River
+TsiteNumbers<-c("05331000",#Mississippi River
+                "05330920",#Minnesota River
                 "05344490",#St Croix River
                 "05369500",#Chippewa River
                 "05382000",#Black River Upper
@@ -267,7 +268,8 @@ TsiteNumbers<-c("05330920",#Minnesota River
 )
 
 
-TribNames<-c('Minnesota River',
+TribNames<-c('Mississippi River',
+             'Minnesota River',
              'St. Croix River',
              'Chippewa River',
              'Black River Upper',
