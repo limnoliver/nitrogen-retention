@@ -116,9 +116,8 @@ dev.off()
 # Different from above in that it only plots one curve for each Pool, rather than looping through all possable z and tau
 # =============================
 Pooldata<-readRDS(file = "UMR_Pool_Summary_Table.rds")
-
-Modeldata<-Pooldata[!is.na(Pooldata$Volume), ]
-Modeldata<-Pooldata[Pooldata$Pool %in% c("Pepin", "p8", "p26"), ]
+Pooldata2<-Pooldata[!is.na(Pooldata$Volume),]
+Modeldata<-Pooldata2[Pooldata2$Pool %in% c("Pepin", "p8", "p26"), ]
 
 # Set parameter estimates; (Lake Pepin and Pool 8, examples)
 pool_names<-sub("p", "Pool ", Modeldata$Pool)
@@ -126,7 +125,6 @@ pool_names<-sub("PePool in", "Pepin", pool_names)
 z = Modeldata$Z_mean_m #mean depth (m)
 tau = round(Modeldata$WRT_d,digits=2) /365 #WRT (Years)
 R = Modeldata$RNO3
-
 vfrange<-c(0, 3) #log scale (m yr-1)
 
 # plot curve
@@ -178,10 +176,9 @@ box(which='plot')
 
 dev.off()
 
-Pooldata<-Pooldata[!is.na(Pooldata$Volume),]
 
-null<-lm(Pooldata$RNO3~1)
-Model1<-lm(Pooldata$RNO3~Pooldata$I_Area + Pooldata$BWc_Area + Pooldata$WRT_d + Pooldata$NO3_start)
+null<-lm(Pooldata2$RNO3~1)
+Model1<-lm(Pooldata2$RNO3~Pooldata2$I_Area + Pooldata2$BWc_Area + Pooldata2$WRT_d + Pooldata2$NO3_start)
 summary(Model1)
 anova(Model1)
 anova(Model1)
@@ -189,20 +186,25 @@ Model2<-step(Model1, scope=list(lower=null, upper=Model1), direction='both')
 summary(Model2)
 anova(Model2)
 
-Model_NO3<-null<-lm(Pooldata$RNO3~Pooldata$NO3_start)
+Model_NO3<-null<-lm(Pooldata2$RNO3~Pooldata2$NO3_start)
 summary(Model_NO3)
 anova(Model_NO3)
 
-Model_WRT<-null<-lm(Pooldata$RNO3~Pooldata$WRT_d)
+Model_WRT<-null<-lm(Pooldata2$RNO3~Pooldata2$WRT_d)
 summary(Model_WRT)
 anova(Model_WRT)
 
-Model_I<-null<-lm(Pooldata$RNO3~Pooldata$I_Area)
+Model_I<-null<-lm(Pooldata2$RNO3~Pooldata2$I_Area)
 summary(Model_I)
 anova(Model_I)
 
-Model_BW<-null<-lm(Pooldata$RNO3~Pooldata$BWc_Area)
+Model_BW<-null<-lm(Pooldata2$RNO3~Pooldata2$BWc_Area)
 summary(Model_BW)
 anova(Model_BW)
 
 anova(Model_NO3, Model2)
+
+#Summarize Pool Areas
+AllPool_TotalArea<-sum(Pooldata$TotalArea, na.rm=T)
+AllPool_ImpoundArea<-sum(Pooldata$TotalArea*Pooldata$I_Area, na.rm=T)/sum(Pooldata$TotalArea, na.rm=T)
+AllPool_BackwaterArea<-sum(Pooldata$TotalArea*Pooldata$BWc_Area, na.rm=T)/sum(Pooldata$TotalArea, na.rm=T)
