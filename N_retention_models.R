@@ -178,33 +178,120 @@ dev.off()
 
 
 null<-lm(Pooldata2$RNO3~1)
-Model1<-lm(Pooldata2$RNO3~Pooldata2$I_Area + Pooldata2$BWc_Area + Pooldata2$WRT_d + Pooldata2$NO3_start)
+Model1<-lm(Pooldata2$RNO3~Pooldata2$Z_mean_m + Pooldata2$I_Area + Pooldata2$BWc_Area + Pooldata2$WRT_d + Pooldata2$NO3_start)
 summary(Model1)
 anova(Model1)
 anova(Model1)
-Model2<-step(Model1, scope=list(lower=null, upper=Model1), direction='both')
+Model2<-step(Model1, scope=list(lower=null, upper=Model1), direction='backward')
 summary(Model2)
 anova(Model2)
 
-Model_NO3<-null<-lm(Pooldata2$RNO3~Pooldata2$NO3_start)
+Model_NO3<-lm(Pooldata2$RNO3~Pooldata2$NO3_start)
 summary(Model_NO3)
 anova(Model_NO3)
 
-Model_WRT<-null<-lm(Pooldata2$RNO3~Pooldata2$WRT_d)
+Model_Z<-lm(Pooldata2$RNO3~Pooldata2$Z_mean_m)
+summary(Model_Z)
+anova(Model_Z)
+
+Model_WRT<-lm(Pooldata2$RNO3~Pooldata2$WRT_d)
 summary(Model_WRT)
 anova(Model_WRT)
 
-Model_I<-null<-lm(Pooldata2$RNO3~Pooldata2$I_Area)
+Model_I<-lm(Pooldata2$RNO3~Pooldata2$I_Area)
 summary(Model_I)
 anova(Model_I)
 
-Model_BW<-null<-lm(Pooldata2$RNO3~Pooldata2$BWc_Area)
+Model_BW<-lm(Pooldata2$RNO3~Pooldata2$BWc_Area)
 summary(Model_BW)
 anova(Model_BW)
 
 anova(Model_NO3, Model2)
 
-#Summarize Pool Areas
-AllPool_TotalArea<-sum(Pooldata$TotalArea, na.rm=T)
-AllPool_ImpoundArea<-sum(Pooldata$TotalArea*Pooldata$I_Area, na.rm=T)/sum(Pooldata$TotalArea, na.rm=T)
-AllPool_BackwaterArea<-sum(Pooldata$TotalArea*Pooldata$BWc_Area, na.rm=T)/sum(Pooldata$TotalArea, na.rm=T)
+
+
+null<-lm(Pooldata$Vf~1)
+Model1<-lm(Pooldata$Vf~ Pooldata$I_Area + Pooldata$BWc_Area  + Pooldata$NO3_start)
+summary(Model1)
+anova(Model1)
+
+
+Model_NO3<-lm(Pooldata$Vf~Pooldata$NO3_start)
+summary(Model_NO3)
+anova(Model_NO3)
+
+anova(Model_NO3, Model1)
+
+plot(Pooldata$Vf~Pooldata$RNO3)
+simple<-lm(Pooldata$Vf~Pooldata$RNO3)
+summary(simple)
+
+Pooldata$C_Area<-Pooldata$MC_Area+Pooldata$SC_Area
+
+Cordata<-Pooldata[,c(27, 12, 21:23, 18)]
+M<-cor(Cordata, use="pairwise.complete.obs")
+corrplot(M, method='circle')
+
+labels<-sub("p", "", Pooldata$Pool)
+labels<-sub("Pein", "Pepin", labels)
+labels<-labels[-length(labels)]
+
+png("E:/Dropbox/FLAME_MississippiRiver/N_retention_PerPool.png", res=200, width=3,height=4, units="in")
+cex=0.7
+par(cex=cex, cex.axis=cex)
+par(mfrow=c(1,1))
+par(tck=-0.02)
+
+par(mar=c(2.5,0.5,0.5,3), oma=c(0,0,0,0))
+
+barplot(rev(Pooldata$RNO3[-nrow(Pooldata)]), col="darkgrey", xlim=extendrange(Pooldata$RNO3[-nrow(Pooldata)], f=0.05), las=1, space=0, horiz=T, xaxt="n")
+abline(v=0, lwd=1)
+polygon( c(par('usr')[1:2], par('usr')[2:1]), c(2, 2, 8, 8), col="lightgrey", border=NA)
+barplot(rev(Pooldata$RNO3[-nrow(Pooldata)]), col="darkgrey", xlim=extendrange(Pooldata$RNO3[-nrow(Pooldata)], f=0.05), las=1, space=0, horiz=T, add=T, xaxt="n")
+axis(1, mgp=c(3,0.3,0))
+axis(4, at=seq(1:length(Pooldata$RNO3[-nrow(Pooldata)]))-0.5, labels=rev(labels), las=1, mgp=c(3,0.5,0))
+mtext("Pool", 4, 1.8)
+mtext(expression(paste(NO[3], " Retention")), 1, 1.5)
+
+text(x=0, par('usr')[4]-0.6, 'Production', pos=2, cex=cex)
+text(x=0, par('usr')[4]-0.6, 'Retention', pos=4,cex=cex)
+arrows(x0=c(-.2, .2), y0=c(par('usr')[4]-1.5), x1=c(-.4, .4), y1=c(par('usr')[4]-1.5), lwd=2, length=0.1)
+text(x=par('usr')[1], y=5, "Non-baseflow conditions",cex=cex, pos=4, offset=0.1)
+
+box(which='plot')
+
+dev.off()
+
+
+
+png("E:/Dropbox/FLAME_MississippiRiver/N_retention_PerPool_vertical.png", res=200, width=4,height=2.5, units="in")
+cex=0.6
+par(cex=cex, cex.axis=cex)
+par(mfrow=c(1,1))
+par(tck=-0.02)
+
+par(mar=c(2.5,3,0.5,0.5), oma=c(0,0,0,0))
+
+barplot((Pooldata$RNO3[-nrow(Pooldata)]), col="grey50", ylim=extendrange(Pooldata$RNO3[-nrow(Pooldata)], f=0.05), las=1, space=0, yaxt="n")
+abline(h=0, lwd=1)
+polygon( c(19, 19, 25, 25), c(par('usr')[3:4], par('usr')[4:3]), col="grey90", border=NA)
+barplot((Pooldata$RNO3[-nrow(Pooldata)]), col="grey50", ylim=extendrange(Pooldata$RNO3[-nrow(Pooldata)], f=0.05), las=1, space=0, yaxt="n", add=T)
+axis(2, mgp=c(3,0.4,0), las=1, at=seq(-1,.5, by=0.5), labels=seq(-100, 50, by=50))
+axis(1, at=seq(1:length(Pooldata$RNO3[-nrow(Pooldata)]))-0.5, labels=NA, mgp=c(3,0.2,0), las=0)
+text(seq(1:length(Pooldata$RNO3[-nrow(Pooldata)]))+0.5, par("usr")[3] - 0.05, labels = labels, srt = 90, xpd = TRUE, cex=cex, pos=2)
+mtext("Pool", 1, 1.2)
+mtext(expression(paste(NO[3], " Retention (%)")), 2, 1.5)
+
+text(x=mean(par('usr')[1:2]), y=0, 'Production', pos=1, cex=cex, offset=2.2)
+text(x=mean(par('usr')[1:2]),  y=0, 'Retention', pos=3, cex=cex, offset=2.2)
+arrows(y0=c(-.2, .2), x0=mean(par('usr')[1:2]), y1=c(-.38, .38), x1=mean(par('usr')[1:2]), lwd=2, length=0.08)
+# text(x=22.2, y=0.48, "High tributary", cex=cex, pos=3, offset=0.1)
+# text(x=22.2, y=0.4, "flows", cex=cex, pos=3, offset=0.1)
+
+text(x=18, y=-1.2, "High tributary flows", cex=cex, pos=2)
+arrows(y0=-1.2, x0=17.5, y1=-1.2, x1=19, lwd=2, length=0.08)
+
+box(which='plot')
+
+dev.off()
+
