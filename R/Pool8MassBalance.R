@@ -1,10 +1,10 @@
-#####################################################
+# ###################################################
 # Script to calculate NO3 retention in Pool 8
 # Code will run for all of the Pool 8 sampling events
 # Inputs include discharge (Q) and [NO3] (mg N / L)
 # Inputs include Dam 7, Root and Lacrosse Rivers
 # Output is condition at Dam 8
-#####################################################
+# ###################################################
 
 # load packages
 library(dataRetrieval)
@@ -13,19 +13,41 @@ library(dataRetrieval)
 StartDate<-"2014-01-01"
 EndDate<-"2016-11-03"
 
-# Get Dam 7 Discharge Data
-# setwd("E:/Dropbox/FLAME_MississippiRiver")
-# Dam7Q<-read.table('ld7_Q_2014.txt', header=T, skip=5, stringsAsFactors = F, sep="")
-# Dam7Q$DATE<-as.Date(Dam7Q$DATE, format="%d%b%Y")
-# Dam7Q<-Dam7Q[!is.na(Dam7Q$DATE),]
+setwd("E:/Dropbox/FLAME_MississippiRiver")
 
+# Get Dam 7 Discharge Data
+Dam7Q<-read.table('DischargeData/ld7_Q_2014.txt', header=T, skip=5, stringsAsFactors = F, sep="")
+Dam7Q$DATE<-as.Date(Dam7Q$DATE, format="%d%b%Y")
+Dam7Q<-Dam7Q[!is.na(Dam7Q$DATE),]
+Dam7Q$Flow_cms<-Dam7Q$INST.VAL/35.3147
 
 # Get Dam 8 Discharge Data
-setwd("E:/Dropbox/FLAME_MississippiRiver")
-Dam8Q<-read.table('ld8_Q_2014.txt', header=T, skip=5, stringsAsFactors = F, sep="")
+Dam8Q<-read.table('DischargeData/ld8_Q_2014.txt', header=T, skip=5, stringsAsFactors = F, sep="")
 Dam8Q$DATE<-as.Date(Dam8Q$DATE, format="%d%b%Y")
 Dam8Q<-Dam8Q[!is.na(Dam8Q$DATE),]
+Dam8Q$Flow_cms<-Dam8Q$INST.VAL/35.3147
 
+# ==================================
+# Get FLAME and LTER Water Chem Data
+# ==================================
+
+WaterChemData<-read.csv('MissRiverFlameLabMerged.csv', header=T, stringsAsFactors = F)
+WaterChemData$DateTime<-as.POSIXct(WaterChemData$DateTime, format="%Y-%m-%d %H:%M:%S", tz="America/Chicago")
+
+sites<-unique(WaterChemData$Sample.Notes)
+dam8samples<-grep("D8", WaterChemData$Sample.Notes)
+dam7samples<-grep("D7", WaterChemData$Sample.Notes)
+rootsamples<-grep("Root", WaterChemData$Sample.Notes)
+blacksamples<-grep("Black", WaterChemData$Sample.Notes)
+lacrossesamples<-grep("Crosse", WaterChemData$Sample.Notes)
+
+dam8Data<-WaterChemData[dam8samples,]
+dam7Data<-WaterChemData[dam7samples,]
+rootData<-WaterChemData[rootsamples,]
+blackData<-WaterChemData[blacksamples,]
+lacrosseData<-WaterChemData[lacrossesamples,]
+
+SampleDates<-unique(as.Date(c(dam8Data$Date, dam7Data$Date, rootData$Date, blackData$Date, lacrosseData$Date)))
 
 # ==================================
 # Get Tributary Water Chemistry and Discharge Data
@@ -65,5 +87,14 @@ Rootmerge<-merge(trib_list[c('Root River Main')][[1]], trib_list[c('Root River S
 Rootmerge$Flow_cms<-Rootmerge$Flow_cms.x+Rootmerge$Flow_cms.y
 trib_list[[length(trib_list)+1]]<-Rootmerge
 names(trib_list)[[length(trib_list)]]<-'Root River'
+
+# ==================================
+# Loop through dates and make mass balance
+# ==================================
+
+
+
+
+
 
 
