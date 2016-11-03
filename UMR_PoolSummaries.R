@@ -532,20 +532,43 @@ merge1<-merge(summary_df, bathy_df, by='Pool', all=T)
 merge2<-merge(merge1, pool_summary, by='Pool', all=T)
 merge2<-merge2[order(merge2$RiverKM_start),]
 
-merge2$WRT_d<-merge2$Volume/merge2$Q*(1000000/3600/24) #days
-merge2$Z_mean_m<-merge2$Volume/merge2$TotalArea
+#Summarize Pool Areas
 
-merge2$Vf<-((-1)*merge2$Z_mean_m/merge2$WRT_d*365 * log(1-merge2$RNO3))
-merge2$vf50<-((-1)*merge2$Z_mean_m/merge2$WRT_d*365 * log(1-0.5))
-merge2$vf20<-((-1)*merge2$Z_mean_m/merge2$WRT_d*365 * log(1-0.2))
-merge2$vf10<-((-1)*merge2$Z_mean_m/merge2$WRT_d*365 * log(1-0.1))
 
-names(merge2)[names(merge2) == 'Q'] <- 'Q_cms'
+AllPools<-merge2[1,]
+AllPools[1,]<-NA
+AllPools$Pool<-"All Pools"
+AllPools$TotalArea<-sum(merge2$TotalArea, na.rm=T)
+AllPools$I_Area<-sum(merge2$TotalArea*merge2$I_Area, na.rm=T)/sum(merge2$TotalArea, na.rm=T)
+AllPools$BWc_Area<-sum(merge2$TotalArea*merge2$BWc_Area, na.rm=T)/sum(merge2$TotalArea, na.rm=T)
+AllPools$RTurb<-(-0.833)
+AllPools$RNO3<-0.087
+AllPools$Q<-merge2$Q[merge2$Pool=='p26']
+
+merge3<-rbind(merge2, AllPools)
+
+merge3$WRT_d<-merge3$Volume/merge3$Q*(1000000/3600/24) #days
+merge3$Z_mean_m<-merge3$Volume/merge3$TotalArea
+
+# merge3$Vf<-((-1)*merge3$Z_mean_m/merge3$WRT_d*365 * log(1-merge3$RNO3))
+# merge3$vf50<-((-1)*merge3$Z_mean_m/merge3$WRT_d*365 * log(1-0.5))
+# merge3$vf20<-((-1)*merge3$Z_mean_m/merge3$WRT_d*365 * log(1-0.2))
+# merge3$vf10<-((-1)*merge3$Z_mean_m/merge3$WRT_d*365 * log(1-0.1))
+
+merge3$Vf<-((-1)*merge3$Q/merge3$TotalArea*31.54 * log(1-merge3$RNO3))
+merge3$vf50<-((-1)*merge3$Q/merge3$TotalArea*31.54 * log(1-0.5))
+merge3$vf20<-((-1)*merge3$Q/merge3$TotalArea*31.54 * log(1-0.2))
+merge3$vf10<-((-1)*merge3$Q/merge3$TotalArea*31.54 * log(1-0.1))
+
+
+
+
+names(merge3)[names(merge3) == 'Q'] <- 'Q_cms'
 
 setwd('E:/Dropbox/FLAME_MississippiRiver')
-write.table(merge2, "UMR_Pool_Summary_Table.csv", sep=",", row.names=F, col.names=T)
+write.table(merge3, "UMR_Pool_Summary_Table.csv", sep=",", row.names=F, col.names=T)
 
 setwd("E:/Git_Repo/nitrogen-retention")
-saveRDS(merge2, file = "UMR_Pool_Summary_Table.rds")
+saveRDS(merge3, file = "UMR_Pool_Summary_Table.rds")
 
 
