@@ -35,13 +35,17 @@ Dam8Q<-Dam8Q[!is.na(Dam8Q$DATE),]
 TsiteNumbers<-c("05382000",#Black River Upper
                 "05383075",#LaCrosse River
                 "05385000",#Root River Main
-                "05385500"#Root River South
+                "05385500",#Root River South
+                "05378500", # UMR Winona (LD 5a) 
+                "05420500" # UMR Clinton (LD 13) 
 )
 
 TribNames<-c('Black River Upper',
              'LaCrosse River',
              'Root River Main',
-             'Root River South')
+             'Root River South', 
+             'UMR Winona (LD 5a)', 
+             'UMR Clinton (LD 13)')
 
 parameterCd <- c("00060") # Discharge
 
