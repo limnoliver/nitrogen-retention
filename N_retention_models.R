@@ -195,7 +195,7 @@ cex=0.8
 par(cex=cex)
 
 par(mfrow=c(2,2))
-par(mar=c(3,1,0.5,0.5), oma=c(0,3,0,0))
+par(mar=c(3,1,0.5,0.5), oma=c(0,2.5,0,0))
 par(mgp=c(3,.5,0))
 par(tck=-0.03)
 plot(Gooddata$RNO3~ Gooddata$TotalArea, las=1, pch=16, cex.axis=cex)
@@ -230,19 +230,18 @@ Modelb<-lm(Gooddata$RNO3~rowSums(data.frame(Gooddata$BWc_Area, Gooddata$I_Area))
 summary(Modelb)
 Modelc<-lm(Gooddata$RNO3~Gooddata$NO3_start)
 summary(Modelc)
-Modeld<-lm(Gooddata$RNO3~Gooddata$WRT_d)
+Modeld<-lm(Gooddata$RNO3~Gooddata$WRTguess)
 summary(Modeld)
 
 
 null<-lm(Gooddata$RNO3~1)
-Model1<-lm(Gooddata$RNO3~Gooddata$Z_mean_m + Gooddata$I_Area + Gooddata$BWc_Area + Gooddata$WRT_d + Gooddata$NO3_start)
+Model1<-lm(Gooddata$RNO3~ Gooddata$TotalArea+Gooddata$I_Area + Gooddata$BWc_Area + Gooddata$WRTguess + Gooddata$NO3_start)
 
-null<-lm(Pooldata2$RNO3~1)
-Model1<-lm(Pooldata2$RNO3~Pooldata2$Z_mean_m + Pooldata2$I_Area + Pooldata2$BWc_Area + Pooldata2$WRT_d + Pooldata2$NO3_start)
+
 summary(Model1)
 anova(Model1)
-anova(Model1)
-Model2<-step(Model1, scope=list(lower=null, upper=Model1), direction='backward')
+
+Model2<-step(Model1, scope=list(lower=Model1, upper=null), direction='forward')
 summary(Model2)
 anova(Model2)
 
