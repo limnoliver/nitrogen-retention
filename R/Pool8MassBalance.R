@@ -82,6 +82,7 @@ TsiteNumbers<-c("05382000",#Black River Upper
                 "05383075",#LaCrosse River
                 "05385000",#Root River Main
                 "05385500",#Root River South
+                "05379500",#Trempeleau
                 "05378500", # UMR Winona (LD 5a) 
                 "05420500" # UMR Clinton (LD 13) 
 )
@@ -89,7 +90,8 @@ TsiteNumbers<-c("05382000",#Black River Upper
 TribNames<-c('Black River Upper',
              'LaCrosse River',
              'Root River Main',
-             'Root River South', 
+             'Root River South',
+             'Trempeleau',
              'UMR Winona (LD 5a)', 
              'UMR Clinton (LD 13)')
 
@@ -112,6 +114,12 @@ Rootmerge$Flow_cms<-rowSums(data.frame(Rootmerge$Flow_cms.x, Rootmerge$Flow_cms.
 trib_list[[length(trib_list)+1]]<-Rootmerge
 names(trib_list)[[length(trib_list)]]<-'Root River'
 
+LD7merge1<-merge(trib_list[c('UMR Winona (LD 5a)')][[1]], trib_list[c('Trempeleau')][[1]], by='Date', all=T)
+LD7merge2<-merge(LD7merge1, trib_list[c('Black River Upper')][[1]], by='Date', all=T)
+LD7merge2$Flow_cms<-rowSums(data.frame(LD7merge2$Flow_cms.x, LD7merge2$Flow_cms.y, LD7merge2$Flow_cms), na.rm=T)
+trib_list[[length(trib_list)+1]]<-LD7merge2
+names(trib_list)[[length(trib_list)]]<-'UMR_ALD7'
+
 # ==================================
 # Loop through dates and make mass balance
 # ==================================
@@ -119,8 +127,8 @@ names(trib_list)[[length(trib_list)]]<-'Root River'
 
 # start Loop here
 # Make list and data frame to fill with data
-pool_summary<-as.data.frame(matrix(nrow=length(unique(SampleChemData$group)), ncol=8), stringsAsFactors = F)
-names(pool_summary)<-(c("Date", "NO3_start", "NO3_end", "dNO3", "RNO3", "Dam7_Q", "Dam8_Q", "RR_Q"))
+pool_summary<-as.data.frame(matrix(nrow=length(unique(SampleChemData$group)), ncol=10), stringsAsFactors = F)
+names(pool_summary)<-(c("Date", "NO3_start", "NO3_end", "dNO3", "RNO3", "Dam7_Q", "Dam8_Q", "RR_Q", "USGS_Q", "Temp"))
 
 row<-2
 for (row in unique(SampleChemData$group)){
@@ -159,6 +167,7 @@ for (row in unique(SampleChemData$group)){
   # Get Q for Main Channel
   MR_in_Q<-Dam7Q$Flow_cms[Dam7Q$DATE==day]-BR_in_Q
   MR_out_Q<-Dam8Q$Flow_cms[Dam8Q$DATE==day]
+  USGS_Q<-trib_list[[c("UMR_ALD7")]][trib_list[[c("UMR_ALD7")]]$Date==day,c('Flow_cms')]
   
   # NO3 mass balance
   In_NO3<-((MR_in*MR_in_Q) + (RR_in*RR_in_Q) + (LR_in*LR_in_Q) + (BR_in*BR_in_Q) ) / (MR_in_Q+RR_in_Q+LR_in_Q+BR_in_Q)
@@ -176,6 +185,8 @@ for (row in unique(SampleChemData$group)){
     pool_summary[row,6]<-MR_in_Q    
     pool_summary[row,7]<-MR_out_Q
     pool_summary[row,8]<-RR_in_Q
+    pool_summary[row,9]<-USGS_Q
+    pool_summary[row,10]<-mean(GroupChemData$TempC, na.rm=T)
   }
   else {print('Missing Data')}
 }
@@ -183,97 +194,16 @@ pool_summary$Date<-as.Date(pool_summary$Date)
 pool_summary$RR_pct<-pool_summary$RR_Q/pool_summary$MR_Q
 pool_summary
 
-
-plot(pool_summary$MR_Q, pool_summary$RNO3)
-plot(pool_summary$Date, pool_summary$RNO3)
+par(mfrow=c(1,4))
+plot(pool_summary$Date, pool_summary$RNO3, type="b")
+abline(h=0)
+plot(pool_summary$Dam8_Q, pool_summary$RNO3)
+abline(h=0)
+plot(pool_summary$Temp, pool_summary$RNO3)
+abline(h=0)
+plot(pool_summary$NO3_start, pool_summary$RNO3)
 abline(h=0)
 
-
-
-
-    sub<-NO3data[NO3data$riverkm<dam_km[dam_nu],]
-    sub2<-Turbdata[Turbdata$riverkm<dam_km[dam_nu],]
-  }
-  else {
-    sub<-NO3data[NO3data$riverkm<dam_km[dam_nu] & NO3data$riverkm>dam_km[dam_nu-1], ]
-    sub2<-Turbdata[Turbdata$riverkm<dam_km[dam_nu] & Turbdata$riverkm>dam_km[dam_nu-1], ] 
-  }
-  flame_date<-median(as.Date(sub$ltime))
-  flamedata_list[[dam_nu]]<-sub
-  flamedata_list2[[dam_nu]]<-sub2
-  names(flamedata_list)[[dam_nu]]<-dam_name[dam_nu]
-  names(flamedata_list2)[[dam_nu]]<-dam_name[dam_nu]
-  
-  #Distance
-  pool_summary[dam_nu,1]<-dam_name[dam_nu]
-  pool_summary[dam_nu,2:3]<-range(sub$riverkm)
-  pool_summary[dam_nu,4]<-pool_summary[dam_nu,3] - pool_summary[dam_nu,2]
-  
-  MR_Q_out<-AugQDaily[AugQDaily$Date==flame_date,c(dam_name[dam_nu])]
-  
-  # If Triburary exists in pool
-  if (dam_nu %in% InputChemistry$poolInterval){
-    
-    #Miss River Metrics
-    MR_NO3in<-median(sub$NITRATEM[1:10], na.rm=T)
-    MR_Turbin<-median(sub2$TurbFNU[1:20], na.rm=T)
-    MR_Q_in<- pool_summary[dam_nu-1,13]
-    
-    #Use Water Chem table for Pool 8 metrics
-    #flame data are bad because we sampled this stretch 3 times over 2 days
-    if (dam_name[dam_nu]=='8'){
-      MR_NO3in<-0.78
-      MR_Turbin<-9.01
-    }   
-    
-    #Tributary Metrics
-    Trib_NO3in<- InputChemistry$NITRATEMG[InputChemistry$poolInterval==dam_nu]
-    Trib_Turbin<- InputChemistry$TurbFNU[InputChemistry$poolInterval==dam_nu]
-    Trib_Q<- InputChemistry$Q[InputChemistry$poolInterval==dam_nu]
-    
-    #NO3 initial
-    pool_summary[dam_nu,5] <- ((Trib_NO3in*Trib_Q) + (MR_NO3in*MR_Q_in)) / (MR_Q_in+Trib_Q)
-    #Turb initial
-    pool_summary[dam_nu,8]<- ((Trib_Turbin*Trib_Q) + (MR_Turbin*MR_Q_in)) / (MR_Q_in+Trib_Q)
-    
-  }
-  else{
-    #NO3 initial
-    pool_summary[dam_nu,5]<-median(sub$NITRATEM[1:10], na.rm=T)
-    #Turb initial
-    pool_summary[dam_nu,8]<-median(sub2$TurbFNU[1:20], na.rm=T)
-  }
-  
-  #NO3 final
-  pool_summary[dam_nu,6]<-median(sub$NITRATEM[(length(sub$NITRATEM)-9):length(sub$NITRATEM)], na.rm=T)
-  #Turb final
-  pool_summary[dam_nu,9]<-median(sub2$TurbFNU[(length(sub2$TurbFNU)-19):length(sub2$TurbFNU)], na.rm=T)
-  
-  if (dam_name[dam_nu]=='8'){
-    pool_summary[dam_nu,6]<-0.768
-    pool_summary[dam_nu,9]<-6.46
-  } 
-  #NO3 change
-  pool_summary[dam_nu,7]<- pool_summary[dam_nu,5] - pool_summary[dam_nu,6]
-  #NO3 Retention (0-1)
-  pool_summary[dam_nu,11]<-pool_summary[dam_nu,7]/pool_summary[dam_nu,5]
-  
-  #Turb change
-  pool_summary[dam_nu,10]<- pool_summary[dam_nu,8] - pool_summary[dam_nu,9]
-  #Turb Retention (0-1)
-  pool_summary[dam_nu,12]<-pool_summary[dam_nu,10]/pool_summary[dam_nu,8]
-  #Discharge out (cms)
-  if (length(MR_Q_out)==1){
-    pool_summary[dam_nu,13]<-MR_Q_out}
-  print(dam_name[dam_nu])
-}
-
-pool_summary$Pool[pool_summary$Pool!='Pepin'& !is.na(pool_summary$Pool)]<-paste("p", pool_summary$Pool[pool_summary$Pool!='Pepin'& !is.na(pool_summary$Pool)], sep="")
-
-print(pool_summary)
-hist(pool_summary$RNO3, breaks=100)
-
-
-
-
+full_model<-lm(pool_summary$RNO3~pool_summary$Dam8_Q + pool_summary$Temp + pool_summary$NO3_start)
+summary(full_model)
 
