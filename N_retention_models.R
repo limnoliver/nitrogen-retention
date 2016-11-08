@@ -176,6 +176,66 @@ box(which='plot')
 
 dev.off()
 
+#Predict WRT/z for pools with no depth data
+Depthmodel<-lm(Pooldata$Z_mean_m~Pooldata$MC_Area)
+Pooldata$Zguess<-Pooldata$Z_mean_m
+for (pool in 1:nrow(Pooldata)){
+  if (is.na(Pooldata$Zguess[pool])){
+    Pooldata$Zguess[pool]<-Pooldata$MC_Area[pool]*Depthmodel$coefficients[2]+Depthmodel$coefficients[1]
+  }
+}
+Pooldata$WRTguess<-Pooldata$Zguess*Pooldata$TotalArea/Pooldata$Q_cms*(1000000/3600/24)
+
+#Simple linear models of Retention across UMR Pools
+
+Gooddata<-Pooldata[!Pooldata$Pool %in% c('p18', 'p19', 'p20', 'p21', 'p22', 'p23', 'p24', 'All Pools'),]
+
+png("E:/Dropbox/FLAME_MississippiRiver/N_Model/N_retention_Drivers.png", res=200, width=5,height=5, units="in")
+cex=0.8
+par(cex=cex)
+
+par(mfrow=c(2,2))
+par(mar=c(3,1,0.5,0.5), oma=c(0,3,0,0))
+par(mgp=c(3,.5,0))
+par(tck=-0.03)
+plot(Gooddata$RNO3~ Gooddata$TotalArea, las=1, pch=16, cex.axis=cex)
+mtext(expression(paste('Total Area (', 'km'^'2', ')')),1,2, cex=cex)
+axis(2, labels=NA)
+abline(h=0)
+plot(Gooddata$RNO3~ rowSums(data.frame(Gooddata$BWc_Area, Gooddata$I_Area)), yaxt="n", pch=16, cex.axis=cex)
+axis(2, labels=NA)
+abline(h=0)
+mtext(expression(paste('Non-Channel Area (%)')),1,2, cex=cex)
+
+plot(Gooddata$RNO3~ Gooddata$NO3_start, las=1,pch=16, cex.axis=cex)
+axis(2, labels=NA)
+abline(h=0)
+mtext(expression(paste('Incoming ', NO[3], " (mg N L"^"-1", ")")),1,2, cex=cex)
+plot(Gooddata$RNO3~ Gooddata$WRT_d, yaxt="n", pch=16, cex.axis=cex)
+points(Gooddata$RNO3~ Gooddata$WRTguess, yaxt="n", pch=1)
+mtext(expression(paste('WRT (d)')),1,2, cex=cex)
+axis(2, labels=NA)
+abline(h=0)
+legend("topleft", inset=0.01, c('Calculated', 'Modeled'), pch=c(16,1), bty="n")
+
+mtext(expression(paste(NO[3], ' Retention (%)')),2,1, outer=T, cex=cex)
+
+dev.off()
+
+
+
+Modela<-lm(Gooddata$RNO3~Gooddata$TotalArea)
+summary(Modela)
+Modelb<-lm(Gooddata$RNO3~rowSums(data.frame(Gooddata$BWc_Area, Gooddata$I_Area)))
+summary(Modelb)
+Modelc<-lm(Gooddata$RNO3~Gooddata$NO3_start)
+summary(Modelc)
+Modeld<-lm(Gooddata$RNO3~Gooddata$WRT_d)
+summary(Modeld)
+
+
+null<-lm(Gooddata$RNO3~1)
+Model1<-lm(Gooddata$RNO3~Gooddata$Z_mean_m + Gooddata$I_Area + Gooddata$BWc_Area + Gooddata$WRT_d + Gooddata$NO3_start)
 
 null<-lm(Pooldata2$RNO3~1)
 Model1<-lm(Pooldata2$RNO3~Pooldata2$Z_mean_m + Pooldata2$I_Area + Pooldata2$BWc_Area + Pooldata2$WRT_d + Pooldata2$NO3_start)
