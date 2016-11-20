@@ -243,3 +243,8 @@ step_model2<-stepAIC(full_model, direction='both')
 anova(step_model2)
 summary(step_model2)
 
+plot(residuals(Q_model)~ pool_summary$Temp)
+abline(h=0)
+
+plot(residuals(Temp_model)~ pool_summary$Dam8_Q)
+abline(h=0)
