@@ -194,16 +194,52 @@ pool_summary$Date<-as.Date(pool_summary$Date)
 pool_summary$RR_pct<-pool_summary$RR_Q/pool_summary$MR_Q
 pool_summary
 
-par(mfrow=c(1,4))
-plot(pool_summary$Date, pool_summary$RNO3, type="b")
+png("E:/Dropbox/FLAME_MississippiRiver/N_Model/N_retention_Drivers_Intrapool.png", res=200, width=5,height=5, units="in")
+cex=0.8
+par(cex=cex)
+
+par(mfrow=c(2,2))
+par(mar=c(3,1,0.5,0.5), oma=c(0,2.5,0,0))
+par(mgp=c(3,.5,0))
+par(tck=-0.03)
+par(pch=16)
+
+plot(pool_summary$Date, pool_summary$RNO3, type="b", las=1, cex.axis=cex)
+mtext("Date", 1, 2, cex=cex)
 abline(h=0)
-plot(pool_summary$Dam8_Q, pool_summary$RNO3)
+plot(pool_summary$Dam8_Q, pool_summary$RNO3, yaxt="n", cex.axis=cex)
+mtext(expression(paste("Discharge (m"^"3", " s"^"-1", ")", sep="")), 1, 2, cex=cex)
 abline(h=0)
-plot(pool_summary$Temp, pool_summary$RNO3)
+plot(pool_summary$Temp, pool_summary$RNO3, yaxt="n", cex.axis=cex)
+mtext(expression(paste("Temperature (", degree, "C)", sep="")), 1, 2, cex=cex)
 abline(h=0)
-plot(pool_summary$NO3_start, pool_summary$RNO3)
+plot(pool_summary$NO3_start, pool_summary$RNO3, yaxt="n", cex.axis=cex)
+mtext(expression(paste('Incoming ', NO[3], " (mg N L"^"-1", ")")),1,2, cex=cex)
 abline(h=0)
 
+mtext(expression(paste(NO[3], ' Retention (%)')),2,1, outer=T, cex=cex)
+
+
+dev.off()
+
+#Single Linear Models
+Q_model<-lm(pool_summary$RNO3~pool_summary$Dam8_Q)
+summary(Q_model)
+Temp_model<-lm(pool_summary$RNO3~pool_summary$Temp)
+summary(Temp_model)             
+NO3_model<-lm(pool_summary$RNO3~pool_summary$NO3_start)
+summary(NO3_model)
+
+#Multiple Linear Models with stepwise selection (AIC - Both)
+null_model<-lm(pool_summary$RNO3~1)
 full_model<-lm(pool_summary$RNO3~pool_summary$Dam8_Q + pool_summary$Temp + pool_summary$NO3_start)
 summary(full_model)
+step_model<-step(null_model, scope=list(lower=null_model, upper=full_model), direction='both')
+anova(step_model)
+summary(step_model)
+
+#Another Function but gives same result
+step_model2<-stepAIC(full_model, direction='both')
+anova(step_model2)
+summary(step_model2)
 
