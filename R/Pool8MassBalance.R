@@ -197,6 +197,7 @@ pool_summary
 png("E:/Dropbox/FLAME_MississippiRiver/N_Model/N_retention_Drivers_Intrapool.png", res=200, width=5,height=5, units="in")
 cex=0.8
 par(cex=cex)
+par(ps=12)
 
 par(mfrow=c(2,2))
 par(mar=c(3,1,0.5,0.5), oma=c(0,2.5,0,0))
