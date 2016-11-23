@@ -191,24 +191,20 @@ Pooldata$WRTguess<-Pooldata$Zguess*Pooldata$TotalArea/Pooldata$Q_cms*(1000000/36
 
 Gooddata<-Pooldata[!Pooldata$Pool %in% c('p18', 'p19', 'p20', 'p21', 'p22', 'p23', 'p24', 'All Pools'),]
 
-png("E:/Dropbox/FLAME_MississippiRiver/N_Model/N_retention_Drivers.png", res=200, width=7,height=5, units="in")
+png("E:/Dropbox/FLAME_MississippiRiver/N_Model/N_retention_Drivers.png", res=200, width=4.2,height=6, units="in")
+
 cex=0.8
 par(cex=cex)
 cexpt=1.5
-
-par(mfrow=c(2,3))
+ps=12
+par(mfrow=c(3,2))
 par(mar=c(3,1,0.5,0.5), oma=c(0,2.5,0,0))
 par(mgp=c(3,.5,0))
 par(tck=-0.03)
 
 plot(Gooddata$RNO3~ Gooddata$TotalArea, las=1, pch=16, cex.axis=cex, cex=cexpt)
 mtext(expression(paste('Total Area (', 'km'^'2', ')')),1,2, cex=cex)
-axis(2, labels=NA)
-abline(h=0)
-
-plot(Gooddata$RNO3~ rowSums(data.frame(Gooddata$MC_Area, Gooddata$SC_Area)), yaxt="n", pch=16, cex.axis=cex, cex=cexpt)
-mtext(expression(paste('Channel Area (%)')),1,2, cex=cex)
-axis(2, labels=NA)
+axis(2, labels=NA, cex=cex)
 abline(h=0)
 
 plot(Gooddata$RNO3~ rowSums(data.frame(Gooddata$BWc_Area, Gooddata$I_Area)), yaxt="n", pch=16, cex.axis=cex, cex=cexpt)
@@ -221,14 +217,19 @@ axis(2, labels=NA)
 abline(h=0)
 mtext(expression(paste('Incoming ', NO[3], " (mg N L"^"-1", ")")),1,2, cex=cex)
 
-plot(Gooddata$RNO3~ Gooddata$H, yaxt="n", pch=16, cex.axis=cex, cex=cexpt)
+plot(Gooddata$RNO3~ Gooddata$RTurb, yaxt="n", pch=16, cex.axis=cex, cex=cexpt)
+mtext(expression(paste('Turbidity Removal (%)')),1,2, cex=cex)
+axis(2, labels=NA, cex=cex)
+abline(h=0)
+
+plot(Gooddata$RNO3~ Gooddata$H, las=1, pch=16, cex.axis=cex, cex=cexpt)
 mtext(expression(paste('Hydraulic Load (m yr'^"-1", ")")),1,2, cex=cex)
 axis(2, labels=NA)
 abline(h=0)
 
 plot(Gooddata$RNO3~ Gooddata$WRT_d, yaxt="n", pch=16, cex.axis=cex, cex=cexpt)
 points(Gooddata$RNO3~ Gooddata$WRTguess, yaxt="n", pch=1, cex=cexpt)
-mtext(expression(paste('WRT (d)')),1,2, cex=cex)
+mtext(expression(paste('Water Residence Time (d)')),1,2, cex=cex)
 axis(2, labels=NA)
 abline(h=0)
 legend("topleft", inset=0.01, c('Calculated', 'Modeled'), pch=c(16,1), bty="n")
