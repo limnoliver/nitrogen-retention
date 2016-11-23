@@ -9,6 +9,7 @@
 # load packages
 library(dataRetrieval)
 library(lubridate)
+library(MASS)
 
 # set start and end date
 StartDate<-"2014-01-01"
