@@ -556,10 +556,10 @@ merge3$H<-merge3$Q/merge3$TotalArea*31.536
 # merge3$vf20<-((-1)*merge3$Z_mean_m/merge3$WRT_d*365 * log(1-0.2))
 # merge3$vf10<-((-1)*merge3$Z_mean_m/merge3$WRT_d*365 * log(1-0.1))
 
-merge3$Vf<-((-1)*merge3$Q/merge3$TotalArea*31.54 * log(1-merge3$RNO3))
-merge3$vf50<-((-1)*merge3$Q/merge3$TotalArea*31.54 * log(1-0.5))
-merge3$vf20<-((-1)*merge3$Q/merge3$TotalArea*31.54 * log(1-0.2))
-merge3$vf10<-((-1)*merge3$Q/merge3$TotalArea*31.54 * log(1-0.1))
+merge3$Vf<-((-1)*merge3$H * log(1-merge3$RNO3))
+merge3$vf50<-((-1)*merge3$H * log(1-0.5))
+merge3$vf20<-((-1)*merge3$H * log(1-0.2))
+merge3$vf10<-((-1)*merge3$H * log(1-0.1))
 
 
 
