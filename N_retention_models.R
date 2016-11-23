@@ -206,7 +206,7 @@ axis(2, labels=NA)
 abline(h=0)
 
 plot(Gooddata$RNO3~ rowSums(data.frame(Gooddata$MC_Area, Gooddata$SC_Area)), yaxt="n", pch=16, cex.axis=cex)
-mtext(expression(paste('Channel Area (', 'km'^'2', ')')),1,2, cex=cex)
+mtext(expression(paste('Channel Area (%)')),1,2, cex=cex)
 axis(2, labels=NA)
 abline(h=0)
 
