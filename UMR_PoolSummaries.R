@@ -549,6 +549,7 @@ merge3<-rbind(merge2, AllPools)
 
 merge3$WRT_d<-merge3$Volume/merge3$Q*(1000000/3600/24) #days
 merge3$Z_mean_m<-merge3$Volume/merge3$TotalArea
+merge3$H<-merge3$Q/merge3$TotalArea*31.536
 
 # merge3$Vf<-((-1)*merge3$Z_mean_m/merge3$WRT_d*365 * log(1-merge3$RNO3))
 # merge3$vf50<-((-1)*merge3$Z_mean_m/merge3$WRT_d*365 * log(1-0.5))
