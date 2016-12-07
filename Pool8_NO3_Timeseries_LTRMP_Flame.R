@@ -232,28 +232,3 @@ mtext("2015", 1, -.5, cex=cex, outer=T)
 dev.off()
 
 
-#Flame stations over time
-subcolors<-(magenta2green(6))
-
-plot(MCdata$DateTime, MCdata$NITRATEMG, col=subcolors[1], pch=8, cex=cex, type="o", ylim=c(0,3.2))
-points(Condata$DateTime, Condata$NITRATEMG, col=subcolors[2], pch=8, cex=cex, type="o")
-points(Rendata$DateTime, Rendata$NITRATEMG, col=subcolors[3], pch=8, cex=cex, type="o")
-points(Turdata$DateTime, Turdata$NITRATEMG, col=subcolors[4], pch=8, cex=cex, type="o")
-points(Tardata$DateTime, Tardata$NITRATEMG, col=subcolors[5], pch=8, cex=cex, type="o")
-points(Lawdata$DateTime, Lawdata$NITRATEMG, col=subcolors[6], pch=8, cex=cex, type="o")
-
-
-
-
-
-
-polygon(c(UMR_Dates, rev(UMR_Dates)), c(-10,-10,10,10), col="gray90", border=NA)
-
-SUNA_Aug<-SUNABuoy[which(SUNABuoy$dt<UMR_Dates[2] & SUNABuoy$dt>UMR_Dates[1]),]
-SUNA_Aug$del_NO3<-NA
-SUNA_Aug$del_NO3[2:length(SUNA_Aug$del_NO3)]<-diff(SUNA_Aug$NO3_mgL_cleaned)
-
-Clinton_Aug<-Clinton[which(Clinton$dateTime<UMR_Dates[2] & Clinton$dateTime>UMR_Dates[1]),]
-
-plot(SUNA_Aug$dt , SUNA_Aug$NO3_mgL_cleaned, type="l", col=colors[length(colors)])
-points(Clinton_Aug$dateTime, Clinton_Aug$`99133_Inst`, col=colors[6], type="b", cex=0.1, pch=16)
