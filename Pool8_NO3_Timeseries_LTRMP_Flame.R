@@ -12,13 +12,12 @@ library(sensorQC)
 # Load image scale function
 source('R/ImageScale.R')
 
-
+#  get discahrge data for Mississippi River (at Winona)
 dischargeUnit<-readRDS('Data/missriver_discharge.rds')
 dischargeUnit<-dischargeUnit[dischargeUnit$site_no=='05378500',]
 
 
 #Get LTRMP NO3 data and plot
-
 a<-read.csv('Data/N_turb_p8fss_2015.csv', header=T, stringsAsFactors = F)
 
 a[,1]<-as.Date(a[,1], format="%m/%d/%Y")
@@ -82,8 +81,7 @@ mtext("2015", 1, -.5, cex=cex, outer=T)
 dev.off()
 
 
-# Look at LTER and FLAME NO3 Data
-
+# get FLAME and LTER data for sample sites
 AllMissMerged<-readRDS('Data/MissRiver_WaterChem_FlameLTER.rds')
 
 dfNO3<-AllMissMerged[which(!is.na(AllMissMerged$`NO3 NO2`) & !is.na(AllMissMerged$NITRATEMG)),]
@@ -95,19 +93,20 @@ lines(c(-1, 10), c(-1, 10), col="red")
 summary(model)
 n<-nrow(dfNO3)
 
+
+# Plot FLAME (SUNA) vs LTER no3
 B<-100 #Number of color breaks
-colors<-bpy.colors(n=B, cutoff.tails=0.1, alpha=1)
-colors<-(blue2green2red(n=B))
-# 
+
+# Turbidity color ramp
 colors<-colorRampPalette(c("blue4", "blue","slategray1", "orange", "brown4", "black"))( 120 )[10:110]
 
 dfNO3$Turbpoint<-log10(dfNO3$TurbFNU)
 dfNO3$Col <- as.numeric(cut(dfNO3$Turbpoint,breaks = B))
 dfNO3$Color<-colors[dfNO3$Col]
-
 dfNO3<-dfNO3[order(dfNO3$TurbFNU),]
+
 #SUNA vs lab figure
-png("LTER_SUNA_NO3.png", width=3, height=3.8, units='in', res=600)
+png("Figures/LTER_SUNA_NO3.png", width=3, height=3.8, units='in', res=600)
 
 cex=0.9
 par(cex=cex, cex.axis=cex)
@@ -146,18 +145,6 @@ box()
 
 dev.off()
 
-
-
-UMR_Dates <- as.POSIXct(c("2015-07-15 00:00:00", "2015-08-30 00:00:00"), tz="America/Chicago")
-UMRNO3<-dfNO3[which(dfNO3$DateTime< UMR_Dates[2] & dfNO3$DateTime > UMR_Dates[1]),]
-
-plot(dfNO3$NITRATEMG~dfNO3$NO3_MG, xlim=lim, ylim=lim, las=1, ylab="", xlab="", axes=F, pch=16)
-points(UMRNO3$NITRATEMG~UMRNO3$NO3_MG, xlim=lim, ylim=lim, las=1, ylab="", xlab="",col="red", pch=16)
-abline(model)
-lines(c(-1, 10), c(-1, 10), lty=2)
-abline(lm(UMRNO3$NITRATEMG~UMRNO3$NO3_MG), col="red")
-# dfDOC<-AllMissMerged[which(!is.na(AllMissMerged$`DOC`)),]
-# plot(dfDOC$fDOMQSU~(dfDOC$'DOC'))
 
 
 
