@@ -9,6 +9,10 @@ library(sp)
 library(gtools)
 library(sensorQC)
 
+# Load image scale function
+source('R/ImageScale.R')
+
+
 dischargeUnit<-readRDS('Data/missriver_discharge.rds')
 dischargeUnit<-dischargeUnit[dischargeUnit$site_no=='05378500',]
 
@@ -77,67 +81,10 @@ mtext("2015", 1, -.5, cex=cex, outer=T)
 
 dev.off()
 
-# Load image scale function
-source('R/ImageScale.R')
 
+# Look at LTER and FLAME NO3 Data
 
-#get LTER chemlab data
-
-allfiles<-list.files()
-waterchemfile<-allfiles[grep('LTER_waterchem', allfiles, ignore.case=T)]
-
-LTERdata<-do.call("rbind", lapply(waterchemfile, read.table, sep="," ,skip=0,  header = TRUE, fill=TRUE, stringsAsFactors = F))
-
-str(LTERdata)
-
-tests<-unique(LTERdata$Test)
-samplesID<-unique(LTERdata$Sample.ID)
-
-# longtable<-LTERdata[,4:6]
-# shorttable<-longtable[!duplicated(longtable[,"Sample.ID"]),]
-
-chemtable<-data.frame(matrix(ncol=1, nrow=length(samplesID)))
-names(chemtable)[1]<-c('Sample.ID')
-chemtable$Sample.ID<-samplesID
-
-
-for (test in tests){
-  testtable<-subset(LTERdata,Test==test)
-  smalltable<-testtable[,c(6,12)]
-  names(smalltable)[2]<-test
-  chemtable<-merge(chemtable, smalltable, by='Sample.ID', all.x=T)
-}
-
-str(chemtable)
-summary(chemtable)
-
-# Get Mississippi River Data
-# And merge with LTER
-
-directories<-list.files('Data')
-# allcsv<-data.frame()
-k<-1
-for (k in 1:length(directories)){
-  dir<-directories[k]
-  list<-list.files(paste('Data/', dir, sep=""))
-  download<-list[grep('_Samples', list, ignore.case=T)]
-  if(length(download)>=1){
-    csv<-read.csv(paste('Data', dir, download, sep="/"), header=T, stringsAsFactors = F)
- 
-    if (k==1){
-    allcsv<-csv}
-    if (k>1){
-    allcsv<-smartbind(allcsv, csv, fill=NA)}
-  }
-}
-
-str(allcsv)
-
-allcsv$DateTime<-as.POSIXct(allcsv$DateTime, format= "%Y-%m-%d %H:%M:%S", tz="America/Chicago")
-
-AllMissMerged<- merge(allcsv, chemtable, by.x='Sample.Number', by.y='Sample.ID', all.x=T)
-
-str(AllMissMerged)
+AllMissMerged<-readRDS('Data/MissRiver_WaterChem_FlameLTER.rds')
 
 dfNO3<-AllMissMerged[which(!is.na(AllMissMerged$`NO3 NO2`) & !is.na(AllMissMerged$NITRATEMG)),]
 dfNO3$NO3_MG<-dfNO3$'NO3 NO2'/1000
