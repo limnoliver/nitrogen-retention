@@ -15,8 +15,12 @@ source('R/ImageScale.R')
 #  get discahrge data for Mississippi River (at Winona)
 dischargeUnit<-readRDS('Data/missriver_discharge.rds')
 dischargeUnit<-dischargeUnit[dischargeUnit$site_no=='05378500',]
+dischargeUnit$dateTime<-as.POSIXct(paste(dischargeUnit$Date, ' 12:00:00', sep=""), tz='America/Chicago')
 
-
+TribDischarge<-readRDS('Data/trib_discharge.rds')
+RootDischarge<-TribDischarge['Root River'][[1]]
+RootDischarge$dateTime<-as.POSIXct(paste(RootDischarge$Date, ' 12:00:00', sep=""), tz='America/Chicago')
+                       
 #Get LTRMP NO3 data and plot
 a<-read.csv('Data/N_turb_p8fss_2015.csv', header=T, stringsAsFactors = F)
 
@@ -73,7 +77,7 @@ legend("topright", inset=0.02, rev(c(names)), col=rev(colors), pch=rev(pch), bty
 
 mtext(expression(paste(NO[3], " (mg N L"^"-1", ")")), 2, 1.5, cex=cex)
 
-plot(as.POSIXct(paste(dischargeUnit$Date, ' 12:00:00', sep=""), tz='America/Chicago'), dischargeUnit$Flow_cms, type="l", col='black', lty=1, lwd=1, ylab="", xlab="", xlim=xlim)
+plot(dischargeUnit$dateTime, dischargeUnit$Flow_cms, type="l", col='black', lty=1, lwd=1, ylab="", xlab="", xlim=xlim)
 
 mtext(expression(paste("Discharge (m"^"3", " s"^"-1", ")")), 2, 1.5, cex=cex)
 mtext("2015", 1, -.5, cex=cex, outer=T)
@@ -180,54 +184,70 @@ MCCdata<-a[a$site==subsites[4],]
 UMR_Dates <- as.POSIXct(c("2015-08-01 00:00:00", "2015-08-14 00:00:00"), tz="America/Chicago")
 
 
-png("FlameSites_LTRMP_NO3_2015.png", width=4, height=4.5, units='in', res=600)
 
+# Plot of NO3 over time in Pool 8.
+# This will merge with Pool 8 maps (2015)
+png("Figures/FlameSites_LTRMP_NO3_2015.png", width=5, height=3, units='in', res=600)
+
+TScolors<-c(colors[95], 'tan3', 'deepskyblue', 'blue', 'blue4')
 cex=0.6
+# par(ps=8)
 par(cex=cex, cex.axis=cex)
-par(mar=c(1.5,2,0,0))
-par(oma=c(.5,.5,.5,.5))
+par(mar=c(.5,2,0,0))
+par(oma=c(1.5,.5,.5,6.5))
 par(mgp=c(3,.3,0))
 par(tck=c(-.03))
 xlim=range(main_avg2$Date.Time)
-ylim=range(c(TLdata$NOX, LLNdata$NOX, SIdata$NOX,main_avg2$NOX,   SUNABuoy$NO3_mgL_cleaned), na.rm=T)
+ylim=range(c(TLdata$NOX, LLNdata$NOX, SIdata$NOX,main_avg2$NOX), na.rm=T)
 layout(matrix(c(1,2), nrow=2, ncol=1), widths=c(1), heights=c(5,5))
 
 
-plot(main_avg2$Date.Time, main_avg2$NOX, col=colors[length(colors)], type="n", lwd=1, xlab="", ylab="", xlim=xlim, cex=cex, ylim=ylim, pch=16, yaxt="n")
+plot(main_avg2$Date.Time, main_avg2$NOX, col=colors[length(colors)], type="n", lwd=1, xlab="", ylab="", xlim=xlim, cex=cex, ylim=ylim, pch=16, yaxt="n", xaxt="n", bty="L")
+axis(1, at=seq(as.POSIXct('2015-03-01'), as.POSIXct('2015-11-01'), by='month')[c(1,3,5,7,9)], labels=NA)
+
+points(main_avg2$Date.Time, main_avg2$NOX, col=TScolors[1], type="o", lwd=1, cex=cex, ylim=ylim, pch=16)
 axis(2, mgp=c(3,.5,0), las=1)
 
-# polygon(c(UMR_Dates, rev(UMR_Dates)), c(-10,-10,10,10), col="gray90", border=NA)
+points(TLdata$Date.Time, TLdata$NOX, col=TScolors[4], lwd=1, cex=cex, type="o", pch=16)
+points(SIdata$Date.Time, SIdata$NOX, col=TScolors[3], lwd=1, cex=cex, type="o", pch=16)
+points(LLNdata$Date.Time, LLNdata$NOX, col=TScolors[5], lwd=1, cex=cex, type="o", ylim=ylim, pch=16)
 
-# points(SUNABuoy$dt , SUNABuoy$NO3_mgL_cleaned, type="l", col=colors[length(colors)])
-# points(Clinton$dateTime, Clinton$`99133_Inst`, col=colors[6], type="b", cex=0.1, pch=16)
-
-points(main_avg2$Date.Time, main_avg2$NOX, col=colors[length(colors)-1], type="o", lwd=1, cex=cex, ylim=ylim, pch=16)
-axis(2, mgp=c(3,.5,0), las=1)
-
-points(TLdata$Date.Time, TLdata$NOX, col=TLdata$col[1], lwd=1, cex=cex, type="o", pch=16)
-points(SIdata$Date.Time, SIdata$NOX, col=SIdata$col[1], lwd=1, cex=cex, type="o", pch=16)
-points(LLNdata$Date.Time, LLNdata$NOX, col=LLNdata$col[1], lwd=1, cex=cex, type="o", ylim=ylim, pch=16)
-
-points(Tardata$DateTime, Tardata$NITRATEMG, col=TLdata$col[1], pch=8, cex=cex)
-points(Lawdata$DateTime, Lawdata$NITRATEMG, col=LLNdata$col[1], pch=8, cex=cex)
-points(MCdata$DateTime, MCdata$NITRATEMG, col=colors[length(colors)-1], pch=8, cex=cex)
-points(Turdata$DateTime, Turdata$NITRATEMG, col=colors[6], pch=8, cex=cex)
+points(Tardata$DateTime, Tardata$NITRATEMG, col=TScolors[3], pch=8, cex=cex)
+points(Lawdata$DateTime, Lawdata$NITRATEMG, col=TScolors[5], pch=8, cex=cex)
+points(MCdata$DateTime, MCdata$NITRATEMG, col=TScolors[1], pch=8, cex=cex)
+points(Turdata$DateTime, Turdata$NITRATEMG, col=TScolors[2], pch=8, cex=cex)
 
 mtext(expression(paste(NO[3], " (mg N L"^"-1", ")")), 2, 1.5, cex=cex)
 
 box(which='plot')
 
+# turn off clipping and plot legend outside of plot window
+par(xpd=F)
+dimensions<-par('usr')
 
-legend("topright", inset=0.01, c("Main Channel","Stoddard Island",  "Target Lake",  "Lawrence Lake"), col=c(colors[c(7,4,3,1)], "black", "black"), text.col= c(colors[c(7,4,3,1)]) , bty = "o", ncol=1, lwd=1, lty=1, pch=16, cex=cex, title="LTRM sites", title.col="Black")
 
-legend("topleft", inset=0.01, c("Main Channel","Side Channel",  "Target Lake",  "Lawrence Lake"), col=c(colors[c(7,6,3,1)], "black", "black"), text.col= c(colors[c(7,6,3,1)]) , bty = "o", ncol=1, lwd=1, lty=NA, pch=8, cex=cex, title="FLAMe sites", title.col="Black")
+legend(dimensions[2],dimensions[4], c("Main Channel", "Side Channel", "Stoddard Island",  "Target Lake",  "Lawrence Lake"), col=TScolors, text.col= TScolors , bty = "n", ncol=1, cex=cex, title="Sample Site", title.col="Black", xpd=NA)
 
 
-plot(dischargeUnit$dateTime, dischargeUnit$Flow_cms, type="l", col='grey40', lty=1, lwd=1, ylab="", xlab="", xlim=xlim, yaxt="n")
+legend(dimensions[2]+1000000,dimensions[4]-2, c("FLAME", "LTRM"), col='black', bty = "n", ncol=1, lty=c(0,1), pch=c(8, 16), cex=cex, title="Sample Type", title.col="Black", xpd=NA)
+
+
+
+plot(dischargeUnit$dateTime, dischargeUnit$Flow_cms, type="l", col=TScolors[1], lty=1, lwd=1, ylab="", xlab="", xlim=xlim, yaxt="n", xaxt="n")
 axis(2, mgp=c(3,.5,0), las=1)
+axis(1, at=seq(as.POSIXct('2015-03-01'), as.POSIXct('2015-11-01'), by='month')[c(1,3,5,7,9)], labels=c('Mar 1', 'May 1', 'Jul 1', 'Sep 1', 'Nov 1'))
+mtext(expression(paste("Discharge (m"^"3", " s"^"-1", ')')), 2, 1.5, cex=cex)
+
+#Plot Root River Discharge
+par(new=T)
+plot(RootDischarge$dateTime, RootDischarge$Flow_cms, type="l", col='grey40', lty=2, lwd=1, ylab="", xlab="", xlim=xlim, yaxt="n", xaxt="n")
+axis(4, mgp=c(3,.5,0), las=1)
+mtext(expression(paste("Root River")), 4, 1.1, cex=cex)
+mtext(expression(paste("Discharge (m"^"3", " s"^"-1", ')')), 4, 1.8, cex=cex)
+
 
 mtext(expression(paste("Discharge (m"^"3", " s"^"-1", ')')), 2, 1.5, cex=cex)
-mtext("2015", 1, -.5, cex=cex, outer=T)
+mtext("2015", 1, .5, cex=cex, outer=T)
 
 dev.off()
 
