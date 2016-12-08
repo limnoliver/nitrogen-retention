@@ -187,39 +187,42 @@ UMR_Dates <- as.POSIXct(c("2015-08-01 00:00:00", "2015-08-14 00:00:00"), tz="Ame
 
 # Plot of NO3 over time in Pool 8.
 # This will merge with Pool 8 maps (2015)
-png(file="Figures/FlameSites_LTRMP_NO3_2015.png", width=5, height=3, units='in', res=600)
+# png(file="Figures/FlameSites_LTRMP_NO3_2015.png", width=5, height=3, units='in', res=600)
 
-pdf(file="Figures/FlameSites_LTRMP_NO3_2015.pdf", width=5, height=3, units='in', res=600)
+pdf(file="Figures/FlameSites_LTRMP_NO3_2015.pdf", width=4.8, height=3)
 
 
 
-TScolors<-c(colors[95], 'tan3', 'deepskyblue', 'blue', 'blue4')
+TScolors<-c(colors[95], 'tan3', 'deepskyblue', 'dodgerblue', 'dodgerblue4')
 cex=1
+ptcex=0.7
 par(ps=8)
 par(cex=cex, cex.axis=cex)
 par(mar=c(.5,2.5,0,0))
-par(oma=c(2,.5,.5,6))
+par(oma=c(2,1,0.5,5))
 par(mgp=c(3,.3,0))
 par(tck=c(-.03))
 xlim=range(main_avg2$Date.Time)
 ylim=range(c(TLdata$NOX, LLNdata$NOX, SIdata$NOX,main_avg2$NOX), na.rm=T)
+flamedates<-unique(Lawdata$DateTime)
 layout(matrix(c(1,2), nrow=2, ncol=1), widths=c(1), heights=c(5,5))
 
 
 plot(main_avg2$Date.Time, main_avg2$NOX, col=colors[length(colors)], type="n", lwd=1, xlab="", ylab="", xlim=xlim, cex=cex, ylim=ylim, pch=16, yaxt="n", xaxt="n", bty="L")
 axis(1, at=seq(as.POSIXct('2015-03-01'), as.POSIXct('2015-11-01'), by='month')[c(1,3,5,7,9)], labels=NA)
 
-points(main_avg2$Date.Time, main_avg2$NOX, col=TScolors[1], type="o", lwd=1, cex=cex, ylim=ylim, pch=16)
+points(main_avg2$Date.Time, main_avg2$NOX, col=TScolors[1], type="o", lwd=1, cex=ptcex, ylim=ylim, pch=16)
 axis(2, mgp=c(3,.3,0), las=1)
+axis(3, at=flamedates, mgp=c(3,.3,0), las=1, labels=NA)
 
-points(TLdata$Date.Time, TLdata$NOX, col=TScolors[4], lwd=1, cex=cex, type="o", pch=16)
-points(SIdata$Date.Time, SIdata$NOX, col=TScolors[3], lwd=1, cex=cex, type="o", pch=16)
-points(LLNdata$Date.Time, LLNdata$NOX, col=TScolors[5], lwd=1, cex=cex, type="o", ylim=ylim, pch=16)
+points(TLdata$Date.Time, TLdata$NOX, col=TScolors[4], lwd=1, cex=ptcex, type="o", pch=16)
+points(SIdata$Date.Time, SIdata$NOX, col=TScolors[3], lwd=1, cex=ptcex, type="o", pch=16)
+points(LLNdata$Date.Time, LLNdata$NOX, col=TScolors[5], lwd=1, cex=ptcex, type="o", ylim=ylim, pch=16)
 
-points(Tardata$DateTime, Tardata$NITRATEMG, col=TScolors[3], pch=8, cex=cex)
-points(Lawdata$DateTime, Lawdata$NITRATEMG, col=TScolors[5], pch=8, cex=cex)
-points(MCdata$DateTime, MCdata$NITRATEMG, col=TScolors[1], pch=8, cex=cex)
-points(Turdata$DateTime, Turdata$NITRATEMG, col=TScolors[2], pch=8, cex=cex)
+points(Tardata$DateTime, Tardata$NITRATEMG, col=TScolors[4], pch=8, cex=ptcex)
+points(Lawdata$DateTime, Lawdata$NITRATEMG, col=TScolors[5], pch=8, cex=ptcex)
+points(MCdata$DateTime, MCdata$NITRATEMG, col=TScolors[1], pch=8, cex=ptcex)
+points(Turdata$DateTime, Turdata$NITRATEMG, col=TScolors[2], pch=8, cex=ptcex)
 
 mtext(expression(paste(NO[3], " (mg N L"^"-1", ")")), 2, 1.5, cex=cex)
 
@@ -230,24 +233,26 @@ par(xpd=F)
 dimensions<-par('usr')
 
 
-legend(dimensions[2],dimensions[4]+0.3, c("Main Channel", "Side Channel", "Stoddard Island",  "Target Lake",  "Lawrence Lake"), col=TScolors, text.col= TScolors , bty = "n", ncol=1, cex=cex, title="Sample Site", title.col="Black", xpd=NA, y.intersp=0.7)
+legend(dimensions[2]-2000000,dimensions[4]+0.1, c("Main Channel", "Side Channel", "Stoddard Island",  "Target Lake",  "Lawrence Lake"), col=TScolors, text.col= TScolors , bty = "n", ncol=1, cex=cex,  xpd=NA, y.intersp=0.7)
 
 
-legend(dimensions[2]+1000000,dimensions[4]-1.8, c("FLAME", "LTRM"), col='black', bty = "n", ncol=1, lty=c(0,1), pch=c(8, 16), cex=cex, title="Sample Type", title.col="Black", xpd=NA, y.intersp=0.7)
+legend(dimensions[2]+500000,dimensions[4]-2.1, c("FLAME", "LTRM"), col='black', bty = "n", ncol=1, lty=c(0,1), pch=c(8, 16), pt.cex=ptcex, xpd=NA, y.intersp=0.7, seg.len=1.2, x.intersp=0.5)
 
 
 
 plot(dischargeUnit$dateTime, dischargeUnit$Flow_cms, type="l", col=TScolors[1], lty=1, lwd=1, ylab="", xlab="", xlim=xlim, yaxt="n", xaxt="n")
-axis(2, mgp=c(3,.3,0), las=1)
+axis(2, mgp=c(3,.3,0), las=1, col.axis=TScolors[1], col.ticks=TScolors[1])
 axis(1, at=seq(as.POSIXct('2015-03-01'), as.POSIXct('2015-11-01'), by='month')[c(1,3,5,7,9)], labels=c('Mar 1', 'May 1', 'Jul 1', 'Sep 1', 'Nov 1'), mgp=c(3,.1,0))
-mtext(expression(paste("Discharge (m"^"3", " s"^"-1", ')')), 2, 1.5, cex=cex)
+mtext(expression(paste("Mississippi River")), 2, 2.5, cex=cex, col=TScolors[1])
+
+mtext(expression(paste("Discharge (m"^"3", " s"^"-1", ')')), 2, 1.5, cex=cex, col=TScolors[1])
 
 #Plot Root River Discharge
 par(new=T)
-plot(RootDischarge$dateTime, RootDischarge$Flow_cms, type="l", col='grey40', lty=2, lwd=1, ylab="", xlab="", xlim=xlim, yaxt="n", xaxt="n")
-axis(4, mgp=c(3,.3,0), las=1)
-mtext(expression(paste("Root River")), 4, 1.5, cex=cex)
-mtext(expression(paste("Discharge (m"^"3", " s"^"-1", ')')), 4, 2.5, cex=cex)
+plot(RootDischarge$dateTime, RootDischarge$Flow_cms, type="l", col='grey40', lty=5, lwd=1, ylab="", xlab="", xlim=xlim, yaxt="n", xaxt="n")
+axis(4, mgp=c(3,.3,0), las=1,  col.axis='grey40',  col.ticks='grey40')
+mtext(expression(paste("Root River")), 4, 1, cex=cex, col='grey40')
+mtext(expression(paste("Discharge (m"^"3", " s"^"-1", ')')), 4, 2, cex=cex, col='grey40')
 
 
 mtext("2015", 1, .5, cex=cex, outer=T)
