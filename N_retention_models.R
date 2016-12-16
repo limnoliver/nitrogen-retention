@@ -190,6 +190,9 @@ Pooldata$WRTguess<-Pooldata$Zguess*Pooldata$TotalArea/Pooldata$Q_cms*(1000000/36
 #Simple linear models of Retention across UMR Pools
 
 Gooddata<-Pooldata[!Pooldata$Pool %in% c('p18', 'p19', 'p20', 'p21', 'p22', 'p23', 'p24', 'All Pools'),]
+Bardata<-Pooldata
+Bardata$RNO3[Bardata$Pool %in% c('p18', 'p19', 'p20', 'p21', 'p22', 'p23', 'p24', 'All Pools')]<-NA
+Bardata<-Bardata[!Bardata$Pool %in% c('All Pools'),]
 
 png("E:/Dropbox/FLAME_MississippiRiver/N_Model/N_retention_Drivers.png", res=200, width=4.2,height=6, units="in")
 
@@ -228,11 +231,11 @@ axis(2, labels=NA)
 abline(h=0)
 
 plot(Gooddata$RNO3~ Gooddata$WRT_d, yaxt="n", pch=16, cex.axis=cex, cex=cexpt)
-points(Gooddata$RNO3~ Gooddata$WRTguess, yaxt="n", pch=1, cex=cexpt)
+# points(Gooddata$RNO3~ Gooddata$WRTguess, yaxt="n", pch=1, cex=cexpt)
 mtext(expression(paste('Water Residence Time (d)')),1,2, cex=cex)
 axis(2, labels=NA)
 abline(h=0)
-legend("topleft", inset=0.01, c('Calculated', 'Modeled'), pch=c(16,1), bty="n")
+# legend("topleft", inset=0.01, c('Calculated', 'Modeled'), pch=c(16,1), bty="n")
 
 
 mtext(expression(paste(NO[3], ' Retention (%)')),2,1, outer=T, cex=cex)
@@ -351,30 +354,33 @@ dev.off()
 
 
 png("E:/Dropbox/FLAME_MississippiRiver/N_retention_PerPool_vertical.png", res=200, width=4,height=2.5, units="in")
-cex=0.6
+cex=1
 par(cex=cex, cex.axis=cex)
 par(mfrow=c(1,1))
 par(tck=-0.02)
+par(ps=8)
 
-par(mar=c(2.5,3,0.5,0.5), oma=c(0,0,0,0))
+par(mar=c(2.5,2.5,0.5,0.5), oma=c(0,0,0,0))
 
-barplot((Pooldata$RNO3[-nrow(Pooldata)]), col="grey50", ylim=extendrange(Pooldata$RNO3[-nrow(Pooldata)], f=0.05), las=1, space=0, yaxt="n")
-abline(h=0, lwd=1)
+barplot(Bardata$RNO3, col="grey50", ylim=c(-.30, .50), las=1, space=0, yaxt="n")
 polygon( c(19, 19, 25, 25), c(par('usr')[3:4], par('usr')[4:3]), col="grey90", border=NA)
-barplot((Pooldata$RNO3[-nrow(Pooldata)]), col="grey50", ylim=extendrange(Pooldata$RNO3[-nrow(Pooldata)], f=0.05), las=1, space=0, yaxt="n", add=T)
-axis(2, mgp=c(3,0.4,0), las=1, at=seq(-1,.5, by=0.5), labels=seq(-100, 50, by=50))
-axis(1, at=seq(1:length(Pooldata$RNO3[-nrow(Pooldata)]))-0.5, labels=NA, mgp=c(3,0.2,0), las=0)
-text(seq(1:length(Pooldata$RNO3[-nrow(Pooldata)]))+0.5, par("usr")[3] - 0.05, labels = labels, srt = 90, xpd = TRUE, cex=cex, pos=2)
+barplot(Bardata$RNO3, col="grey50", ylim=extendrange(Bardata$RNO3[-nrow(Bardata)], f=0.05), las=1, space=0, yaxt="n", add=T)
+abline(h=0, lwd=0.5, lty=3)
+axis(2, mgp=c(3,0.4,0), las=1, at=seq(-.25,.5, by=0.25), labels=seq(-25, 50, by=25))
+axis(1, at=seq(1:length(Bardata$RNO3))-0.5, labels=NA, mgp=c(3,0.2,0), las=0)
+text(seq(1:length(Bardata$RNO3))+0.5, par("usr")[3] - 0.05, labels = labels, srt = 90, xpd = TRUE, cex=cex, pos=2)
 mtext("Pool", 1, 1.2)
-mtext(expression(paste(NO[3], " Retention (%)")), 2, 1.5)
+mtext(expression(paste(NO[3], " Retention (%)")), 2, 1.25)
 
-text(x=mean(par('usr')[1:2]), y=0, 'Production', pos=1, cex=cex, offset=2.2)
-text(x=mean(par('usr')[1:2]),  y=0, 'Retention', pos=3, cex=cex, offset=2.2)
-arrows(y0=c(-.2, .2), x0=mean(par('usr')[1:2]), y1=c(-.38, .38), x1=mean(par('usr')[1:2]), lwd=2, length=0.08)
+text(x=mean(par('usr')[1:2]), y=-.24, 'Production', pos=2, cex=cex)
+text(x=mean(par('usr')[1:2]),  y=.44, 'Retention', pos=2, cex=cex)
+arrows(y0=c(-.2, .4), x0=mean(par('usr')[1:2]), y1=c(-.28, .48), x1=mean(par('usr')[1:2]), lwd=1.5, length=0.06)
 # text(x=22.2, y=0.48, "High tributary", cex=cex, pos=3, offset=0.1)
 # text(x=22.2, y=0.4, "flows", cex=cex, pos=3, offset=0.1)
 
-text(x=18, y=-1.2, "High tributary flows", cex=cex, pos=2)
+text(x=22, y=.5, "High", cex=cex, pos=1)
+text(x=22, y=.45, "tributary", cex=cex, pos=1)
+text(x=22, y=.4, "flows", cex=cex, pos=1)
 arrows(y0=-1.2, x0=17.5, y1=-1.2, x1=19, lwd=2, length=0.08)
 
 box(which='plot')
