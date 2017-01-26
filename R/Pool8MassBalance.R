@@ -151,13 +151,22 @@ for (row in unique(SampleChemData$group)){
     MR_out<-64.059*14.007/1000
   }
   
-  # Use Jan 2015 use USGS NO3 data. Samples analyzed in Boulder, CO
+  #Jan 2015 use USGS NO3 data. Samples analyzed in Boulder, CO
   if (day=='2015-01-12'){
     MR_in<-120.15*14.007/1000
-    MR_out<-121.37*14.007/1000
+    MR_out<-124.85*14.007/1000
     LR_in<-188.16*14.007/1000
     BR_in<-104.34*14.007/1000
     RR_in<-344.92*14.007/1000
+  }
+  
+  # Jan 2016 use USGS NO3 data. Samples analyzed in Boulder, CO
+  if (day=='2016-01-14'){
+    MR_in<-313.90*14.007/1000
+    MR_out<-313.77*14.007/1000
+    LR_in<-163.32*14.007/1000
+    BR_in<-101.11*14.007/1000
+    RR_in<-444.58*14.007/1000
   }
   
   
