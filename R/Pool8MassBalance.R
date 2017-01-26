@@ -181,8 +181,15 @@ for (row in unique(SampleChemData$group)){
   # Get Q for Tributaries
   RR_in_Q<-trib_list[[c("Root River")]][trib_list[[c("Root River")]]$Date==day,c('Flow_cms')]
   LR_in_Q<-trib_list[[c("LaCrosse River")]][trib_list[[c("LaCrosse River")]]$Date==day,c('Flow_cms')]
-  BR_in_Q<-1500/35 # Set Black River to specific flow (1500 cfs in summer, 500 cfs in winter)
-  BR_in_Q<-0 # or set Black River to zero
+  
+  # Set Black River to specific flow (1500 cfs in summer, 500 cfs in winter)
+  if (month(day) %in% c(11,12,1,2,3)){
+    BR_in_Q<-500/35.3147}
+  if (!month(day) %in% c(11,12,1,2,3)){
+    BR_in_Q<-1500/35.3147}
+  
+  # Or set Black River Q to 0
+  # BR_in_Q<-0
   
   # Get Q for Main Channel
   MR_in_Q<-Dam7Q$Flow_cms[Dam7Q$DATE==day]-BR_in_Q
