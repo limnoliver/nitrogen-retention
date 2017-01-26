@@ -53,10 +53,10 @@ lacrossesamples<-grep(site_names[2], WaterChemData$LOCATCD)
 SampleDates<-unique(WaterChemData$DATE[c(dam8samples, dam7samples, rootsamples, blacksamples, lacrossesamples)])
 SampleDates<-SampleDates[order(SampleDates)]
 
-SampleChemData<-WaterChemData[WaterChemData$DATE %in% SampleDates, ]
-SampleChemData<-SampleChemData[order(SampleChemData$DATE),]
+SampleChemData1<-WaterChemData[WaterChemData$DATE %in% SampleDates, ]
+SampleChemData1<-SampleChemData1[order(SampleChemData1$DATE),]
 
-
+SampleChemData<-SampleChemData1[c("DATE", "LOCATCD", "TEMP", "NOX")]
 
 #Figure out which days are part of the same survey
 today=2
@@ -73,11 +73,11 @@ for (today in 2:nrow(SampleChemData)){
 # maybe<-aggregate(SampleChemData, by=list(SampleChemData$group, SampleChemData$Sample.Notes), FUN=mean)
 
 
-dam8Data<-SampleChemData[grep(site_names[5], WaterChemData$LOCATCD),]
-dam7Data<-SampleChemData[grep(site_names[4], WaterChemData$LOCATCD),]
-rootData<-SampleChemData[grep(site_names[3], WaterChemData$LOCATCD),]
-blackData<-SampleChemData[grep(site_names[1], WaterChemData$LOCATCD),]
-lacrosseData<-SampleChemData[grep(site_names[2], WaterChemData$LOCATCD),]
+dam8Data<-SampleChemData[grep(site_names[5], SampleChemData$LOCATCD),]
+dam7Data<-SampleChemData[grep(site_names[4], SampleChemData$LOCATCD),]
+rootData<-SampleChemData[grep(site_names[3], SampleChemData$LOCATCD),]
+blackData<-SampleChemData[grep(site_names[1], SampleChemData$LOCATCD),]
+lacrosseData<-SampleChemData[grep(site_names[2], SampleChemData$LOCATCD),]
 
 
 # ==================================
@@ -163,12 +163,22 @@ for (row in unique(SampleChemData$group)){
   # Get Q for Tributaries
   RR_in_Q<-trib_list[[c("Root River")]][trib_list[[c("Root River")]]$Date==day,c('Flow_cms')]
   LR_in_Q<-trib_list[[c("LaCrosse River")]][trib_list[[c("LaCrosse River")]]$Date==day,c('Flow_cms')]
-  BR_in_Q<-1500/35 # Set Black River to specific flow (1500 cfs in summer, 500 cfs in winter)
-  BR_in_Q<-0 # or set Black River to zero
   
+  # Set Black River to specific flow (1500 cfs in summer, 500 cfs in winter)
+  if (month(day) %in% c(11,12,1,2,3)){
+    BR_in_Q<-500/35.3147}
+  if (!month(day) %in% c(11,12,1,2,3)){
+    BR_in_Q<-1500/35.3147}
+  
+  #  Black River to 0
+  # BR_in_Q<-0
+
   # Get Q for Main Channel
   MR_in_Q<-Dam7Q$Flow_cms[Dam7Q$DATE==day]-BR_in_Q
   MR_out_Q<-Dam8Q$Flow_cms[Dam8Q$DATE==day]
+  if (length(MR_out_Q)!=1){  
+    MR_out_Q<-MR_in_Q+RR_in_Q+LR_in_Q+BR_in_Q}
+  
   USGS_Q<-trib_list[[c("UMR_ALD7")]][trib_list[[c("UMR_ALD7")]]$Date==day,c('Flow_cms')]
   
   # NO3 mass balance
@@ -196,7 +206,7 @@ pool_summary$Date<-as.Date(pool_summary$Date)
 pool_summary$RR_pct<-pool_summary$RR_Q/pool_summary$MR_Q
 pool_summary
 
-png("E:/Dropbox/FLAME_MississippiRiver/N_Model/N_retention_Drivers_Intrapool.png", res=200, width=4.2,height=4, units="in")
+png("E:/Dropbox/FLAME_MississippiRiver/N_Model/N_retention_Drivers_USGS_Intrapool.png", res=200, width=4.2,height=4, units="in")
 cex=0.8
 cexpt=1.5
 par(cex=cex)
@@ -204,7 +214,7 @@ par(ps=12)
 
 cex=0.8
 par(cex=cex)
-cexpt=1.5
+cexpt=1
 ps=12
 par(mfrow=c(2,2))
 par(mar=c(3,1,0.5,0.5), oma=c(0,2.5,0,0))
@@ -212,7 +222,7 @@ par(mgp=c(3,.5,0))
 par(tck=-0.03)
 par(pch=16)
 
-plot(pool_summary$Date, pool_summary$RNO3, type="b", las=1, cex.axis=cex, cex=cexpt)
+plot(pool_summary$Date, pool_summary$RNO3, type="o", las=1, cex.axis=cex, cex=cexpt)
 mtext("Date", 1, 2, cex=cex)
 abline(h=0)
 
@@ -261,3 +271,11 @@ abline(h=0)
 
 plot(residuals(Temp_model)~ pool_summary$Dam8_Q)
 abline(h=0)
+
+plot(dam7Data$NOX~dam7Data$DATE, type="l", ylim=c(0,8), lwd=2)
+points(dam8Data$NOX~dam8Data$DATE, type="l", col="red", lwd=2)
+points(lacrosseData$NOX~lacrosseData$DATE, type="l", col="brown")
+points(rootData$NOX~rootData$DATE, type="l", col="lightblue")
+points(blackData$NOX~blackData$DATE, type="l", col="green")
+
+
