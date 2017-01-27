@@ -128,13 +128,17 @@ names(trib_list)[[length(trib_list)]]<-'UMR_ALD7'
 
 # start Loop here
 # Make list and data frame to fill with data
-pool_summary<-as.data.frame(matrix(nrow=length(unique(SampleChemData$group)), ncol=10), stringsAsFactors = F)
+pool_summary<-as.data.frame(matrix(nrow=length(unique(SampleChemData$group))+2, ncol=10), stringsAsFactors = F)
 names(pool_summary)<-(c("Date", "NO3_start", "NO3_end", "dNO3", "RNO3", "Dam7_Q", "Dam8_Q", "RR_Q", "USGS_Q", "Temp"))
 
-row<-2
-for (row in unique(SampleChemData$group)){
+row<-9
+for (row in c(unique(SampleChemData$group), length(unique(SampleChemData$group))+1:2)){
   GroupChemData<-SampleChemData[SampleChemData$group==row,]
   day<-round_date(median(GroupChemData$Date), 'day')
+  
+  # set days for winter dates
+  if (row==length(unique(SampleChemData$group))+1){day<-'2015-01-12'}
+  if (row==length(unique(SampleChemData$group))+2){day<-'2016-01-14'}
 
   # Get NO3 values for ins and outs
   # Mississippi In, Mississippi out, Root, Black, and LaCrosse Rivers)
@@ -219,6 +223,9 @@ for (row in unique(SampleChemData$group)){
 }
 pool_summary$Date<-as.Date(pool_summary$Date)
 pool_summary$RR_pct<-pool_summary$RR_Q/pool_summary$MR_Q
+pool_summary[length(unique(SampleChemData$group))+1,10]<-1
+pool_summary[length(unique(SampleChemData$group))+2,10]<-1
+pool_summary<-pool_summary[order(pool_summary$Date),]
 pool_summary
 
 png("E:/Dropbox/FLAME_MississippiRiver/N_Model/N_retention_Drivers_Intrapool.png", res=200, width=4.2,height=4, units="in")
