@@ -106,24 +106,3 @@ saveRDS(dischargeUnit, 'Data/missriver_discharge.rds')
 # End tributary and Miss River Data download
 # ##########################################
 
-# old junk
-
-MissRiver<-InputChemistry[1,]
-MissRiver[1,]<-NA
-MissRiver$Q<-377
-MissRiver$NITRATEMG<-0.61
-MissRiver$TurbFNU<-6.1
-InputChemistry2<-rbind(MissRiver, InputChemistry)
-InputChemistry2<-InputChemistry2[-nrow(InputChemistry2), ]
-
-InputChemistry2$NLoad<-InputChemistry2$Q*InputChemistry2$NITRATEMG
-InputChemistry2$TurbLoad<-InputChemistry2$Q*InputChemistry2$TurbFNU
-
-NO3_In<-sum(InputChemistry2$NLoad)/sum(InputChemistry2$Q)
-NO3_Out<-pool_summary$NO3_end[pool_summary$Pool=='p26']
-AllPoolNO3R<-(NO3_In-NO3_Out)/NO3_In
-
-
-Turb_In<-sum(InputChemistry2$TurbLoad)/sum(InputChemistry2$Q)
-Turb_Out<-pool_summary$Turb_end[pool_summary$Pool=='p26']
-AllPoolTurbR<-(Turb_In-Turb_Out)/Turb_In
