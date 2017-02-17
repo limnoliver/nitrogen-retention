@@ -252,7 +252,9 @@ Modelc<-lm(Gooddata$RNO3~Gooddata$NO3_start)
 summary(Modelc)
 Modeld<-lm(Gooddata$RNO3~Gooddata$WRTguess)
 summary(Modeld)
-Modele<-lm(Gooddata$RNO3~(Gooddata$TotalArea+Gooddata$BWc_Area))
+
+BackwaterArea<-Gooddata$TotalArea*(Gooddata$BWc_Area+Gooddata$I_Area)
+Modele<-lm(Gooddata$RNO3~BackwaterArea)
 summary(Modele)
 
 
