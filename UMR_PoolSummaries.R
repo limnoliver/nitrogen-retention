@@ -561,7 +561,8 @@ merge3$vf50<-((-1)*merge3$H * log(1-0.5))
 merge3$vf20<-((-1)*merge3$H * log(1-0.2))
 merge3$vf10<-((-1)*merge3$H * log(1-0.1))
 
-
+#Uptake Rate mg N per m2 per day
+merge3$U<-merge3$Vf*merge3$NO3_start*1000/365
 
 
 names(merge3)[names(merge3) == 'Q'] <- 'Q_cms'
