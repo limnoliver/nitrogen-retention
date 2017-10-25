@@ -97,6 +97,11 @@ lines(c(-1, 10), c(-1, 10), col="red")
 summary(model)
 n<-nrow(dfNO3)
 
+dfDOC<-AllMissMerged[which(!is.na(AllMissMerged$DOC) & !is.na(AllMissMerged$fDOMRFU)),]
+plot(dfDOC$DOC~dfDOC$fDOMRFU)
+ndoc<-nrow(dfDOC)
+modeldoc<-lm(dfDOC$fDOMRFU~ dfDOC$DOC)
+
 
 # Plot FLAME (SUNA) vs LTER no3
 B<-100 #Number of color breaks
@@ -108,6 +113,11 @@ dfNO3$Turbpoint<-log10(dfNO3$TurbFNU)
 dfNO3$Col <- as.numeric(cut(dfNO3$Turbpoint,breaks = B))
 dfNO3$Color<-colors[dfNO3$Col]
 dfNO3<-dfNO3[order(dfNO3$TurbFNU),]
+
+dfDOC$Turbpoint<-log10(dfDOC$TurbFNU)
+dfDOC$Col <- as.numeric(cut(dfDOC$Turbpoint,breaks = B))
+dfDOC$Color<-colors[dfDOC$Col]
+dfDOC<-dfDOC[order(dfDOC$TurbFNU),]
 
 #SUNA vs lab figure
 png("Figures/LTER_SUNA_NO3.png", width=3, height=3.8, units='in', res=600)
@@ -150,6 +160,45 @@ box()
 dev.off()
 
 
+#ysi vs lab figure DOC-fdom
+png("Figures/LTER_EXO_fdomDOC.png", width=3, height=3.8, units='in', res=600)
+
+cex=0.9
+par(cex=cex, cex.axis=cex)
+par(mar=c(2.5,2.5,0.5,0.5))
+par(oma=rep(0,4))
+par(mgp=c(3,.5,0))
+par(tck=c(-.02))
+xlim=range(dfDOC$DOC, na.rm=T)
+ylim=range(dfDOC$fDOMRFU, na.rm=T)
+
+layout(matrix(c(1,2), nrow=2, ncol=1), widths=c(3), heights=c(3,.8))
+breaks <- seq(min(dfDOC$Turbpoint, na.rm = TRUE), max(dfDOC$Turbpoint, na.rm = TRUE) ,length.out=100)
+# par(mar=c(1,1,1,1))
+
+
+
+plot(dfDOC$DOC, dfDOC$fDOMRFU, xlim=xlim, ylim=ylim, las=1, ylab="", xlab="", axes=F, col=dfDOC$Color, pch=16, cex=1.6)
+box(which='plot')
+axis(1, mgp=c(3,.3,0))
+axis(2, las=1)
+
+mtext(expression(paste('EXO fDOM (RFU)')), 2, 1.5, cex=cex)
+mtext(expression(paste("Lab DOC (mg C L"^"-1", ")")), 1, 1.5, cex=cex)
+
+abline(modeldoc)
+
+legend("topleft", inset=0.02, c("Least Squares"), bty = "n", ncol=1, lty=c(1), cex=cex)
+legend("bottomright", inset=0.02, c(paste("n=",ndoc, sep="")), bty = "n",cex=cex)
+
+#Add scale
+par(mar=c(2,1,1,1), bg=NA, mgp=c(3, .1, 0))
+image.scale((dfDOC$Turbpoint), col=colors[1:(B-1)], breaks=breaks-1e-8, axis.pos=1)
+mtext(expression(paste(log[10], " Turbidity (FNU)", sep="")), 1, 1.1, cex=cex)
+#abline(v=levs)
+box()
+
+dev.off()
 
 
 # Get FLAME data from sites that match LTRMP data
@@ -215,7 +264,7 @@ layout(matrix(c(1,2), nrow=2, ncol=1), widths=c(1), heights=c(5,5))
 
 plot(main_avg2$Date.Time, main_avg2$NOX, type="n", xlab="", ylab="", xlim=xlim, ylim=ylim, yaxt="n", xaxt="n", bty="L")
 axis(1, at=seq(as.POSIXct('2015-03-01'), as.POSIXct('2015-11-01'), by='month')[c(1,3,5,7,9)], labels=NA)
-abline(v=flamedates, lty=2, col="grey40")
+abline(v=flamedates, lty=2, col="grey40", lwd=1)
 
 points(main_avg2$Date.Time, main_avg2$NOX, col=TScolors[1], type="o", lwd=1, cex=ptcex, ylim=ylim, pch=16)
 axis(2, mgp=c(3,.3,0), las=1)
