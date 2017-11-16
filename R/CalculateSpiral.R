@@ -1,3 +1,7 @@
+
+library(RcppRoll)
+source('R/AddAlpha.R')
+
 list.files(getwd())
 setwd("E:/Dropbox/ArcGIS")
 
@@ -38,6 +42,24 @@ head(widthtable)
 head(data2)
 
 plot(widthtable$riverkm, widthtable$WIDTH)
+points(data2$riverkm, data2$NITRATEU, col=2, type='p')
 
+#Sort based on time
+data3<-data2[order(data2$ltime),]
 
+#Rolling means
+data3$rollx<-roll_mean(data3$riverkm, 3, fill=NA)
+data3$rollNO3<-roll_mean(data3$NITRATEM, 3, fill=NA)
+
+#slopes
+data3$dt<-c(NA,diff(data3$ltime))
+data3$dx<-c(NA,diff(data3$rollx))
+data3$dno3<-c(NA,diff(data3$rollNO3))
+
+data4<-data3[which(data3$dx>0 & data3$dx<1),]
+data5<-data4[which(data4$dt<40),]
+
+plot(data5$riverkm, col=add.alpha('black', 0.1), pch=16)
+abline(h=c(250,280,990,1050))
+head(data5)
 
