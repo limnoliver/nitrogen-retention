@@ -1,4 +1,5 @@
 
+library(lubridate)
 
 EvapRate <- function(U, Ew, Ea){
   
@@ -7,9 +8,14 @@ EvapRate <- function(U, Ew, Ea){
   #E is in mm/day
 }
 
-Weather<-read.csv('Data/WeatherUnderground.csv', header=T)
+Weather<-read.csv('Data/WeatherUMRSurvey.csv', header=T, stringsAsFactors = F)
+Weather$Date<-ymd(Weather$Date)
 
 Weather$E_mmPerDay<-EvapRate(Weather$Wind, Weather$Ew, Weather$Ea)
+
+saveRDS(Weather, 'Data/UMR_Weather_EvapRate.rds')
+
+
 
 # 0.447 multiplier for mph to m/s
 
